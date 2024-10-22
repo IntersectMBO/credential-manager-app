@@ -4,18 +4,20 @@ import { someAction } from "@/actions/meshServer";
 import React, { useEffect, useState } from "react";
 
 export const DynamicHookComponent = () => {
-  const [useCustomHook, setUseCustomHook] = useState<any>(null);
+  const [useCustomHook, setUseCustomHook] = useState<any>(() => () => ({ connected: false }));
+  const [isHookLoaded, setIsHookLoaded] = useState(false);
 
   useEffect(() => {
     const loadHook = async () => {
       try {
         const { useWallet } = await import("@meshsdk/react");
-        const {BrowserWallet} = await import("@meshsdk/core");
+        const { BrowserWallet } = await import("@meshsdk/core");
         setUseCustomHook(() => useWallet);
-        const wallet = await BrowserWallet.enable('eternl');
+        const wallet = await BrowserWallet.enable("eternl");
         const balance = await wallet.getBalance();
-        console.log("balance",balance);
+        console.log("balance", balance);
         await someAction();
+        setIsHookLoaded(true);
       } catch (error) {
         console.error("Error loading hook:", error);
       }
@@ -24,17 +26,15 @@ export const DynamicHookComponent = () => {
     loadHook();
   }, []);
 
-  if (useCustomHook === null) {
-    return <div>Loading...</div>;
-  }
-
   const result = useCustomHook();
   console.log(result);
 
-
+  if (!isHookLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div>      
+    <div>
       <div>Hook Result: {result.connected.toString()}</div>
     </div>
   );
