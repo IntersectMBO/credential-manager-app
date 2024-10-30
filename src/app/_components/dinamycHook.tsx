@@ -1,6 +1,5 @@
 "use client";
 
-import { someAction } from "@/actions/meshServer";
 import React, { useEffect, useState } from "react";
 
 export const DynamicHookComponent = () => {
@@ -11,12 +10,7 @@ export const DynamicHookComponent = () => {
     const loadHook = async () => {
       try {
         const { useWallet } = await import("@meshsdk/react");
-        const { BrowserWallet } = await import("@meshsdk/core");
         setUseCustomHook(() => useWallet);
-        const wallet = await BrowserWallet.enable("eternl");
-        const balance = await wallet.getBalance();
-        console.log("balance", balance);
-        await someAction();
         setIsHookLoaded(true);
       } catch (error) {
         console.error("Error loading hook:", error);
@@ -27,7 +21,7 @@ export const DynamicHookComponent = () => {
   }, []);
 
   const result = useCustomHook();
-  console.log(result);
+  console.log('connected wallet name:', result.name);
 
   if (!isHookLoaded) {
     return <div>Loading...</div>;
