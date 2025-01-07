@@ -1,11 +1,12 @@
-import { DynamicHookComponent } from "./_components/dinamycHook";
-import { Wallet } from "./_components/wallet";
+import { Wallet } from "./components/wallet";
 
 export default function Home() {
   return (
     <main>
-      <Wallet/>  
-      <DynamicHookComponent/>    
+      <h1 className="font-bold uppercase mr-auto">Credential Manager App</h1>
+      <div className="ml-auto">
+        <Wallet />
+      </div>
     </main>
   );
 }
