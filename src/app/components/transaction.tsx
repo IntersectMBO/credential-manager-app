@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useWallet } from "@meshsdk/react";
 import { BlockfrostProvider, MeshTxBuilder } from "@meshsdk/core";
-import dotenv from 'dotenv';
 import { Button, TextField, Box, Typography, Container, Alert } from "@mui/material";
-const path = require('path');
-//require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-dotenv.config({ path: './src/.env' });
-//dotenv.config({ path: './src/.env' });
-
 
 
 export const TransactionButton = () => {
@@ -19,10 +13,9 @@ export const TransactionButton = () => {
 
   const { wallet, connected, name, connect, disconnect, error } = useWallet();
 
-  const blockchainProvider = new BlockfrostProvider('');
-  console.log('BLOCKFROST API',process.env.BLOCKFROST_PREVIEW_API);
-  
-  console.log(blockchainProvider);
+  // const blockchainProvider = new BlockfrostProvider(process.env.BLOCKFROST_PREVIEW_API||'');
+  const blockchainProvider = new BlockfrostProvider('')
+
 
   const txBuilder = new MeshTxBuilder({
     fetcher: blockchainProvider,
@@ -45,35 +38,35 @@ export const TransactionButton = () => {
     const changeAddress = await wallet.getChangeAddress();
 
     const network = await wallet.getNetworkId();
-    console.log("Network ID:", network); 
+    console.log("Network ID:", network);
 
-    // try {
-    //   if (!amount || parseFloat(amount) <= 0) {
-    //     setMessage("Please enter a valid ADA amount.");
-    //     return;
-    //   }
+    try {
+      if (!amount || parseFloat(amount) <= 0) {
+        setMessage("Please enter a valid ADA amount.");
+        return;
+      }
 
-    console.log("Building Tx");
-    const unsignedTx = await txBuilder
-     // .txOut(recipientAddress, [{ unit: "lovelace", quantity: amount.concat("000000"}]) //convert ada to lovelace
-     .txOut(changeAddress, [{ unit: "lovelace", quantity: "1000000" }])
-     .changeAddress(changeAddress)
-      .selectUtxosFrom(utxos)
-      .complete();
-//sometimes we don't need to specify the output and it will be input - transaction fee and go to the change address 
-    console.log("Signing Tx");
-    const signedTx = await wallet.signTx(unsignedTx);
-    
-    console.log("Tx built successfully:", signedTx);
+      console.log("Building Tx");
+      const unsignedTx = await txBuilder
+        .txOut(recipientAddress, [{ unit: "lovelace", quantity: amount.concat("000000") }]) //convert ada to lovelace
+        //  .txOut(changeAddress, [{ unit: "lovelace", quantity: "1000000" }])
+        .changeAddress(changeAddress)
+        .selectUtxosFrom(utxos)
+        .complete();
+      //sometimes we don't need to specify the output and it will be input - transaction fee and go to the change address 
+      console.log("Signing Tx");
+      const signedTx = await wallet.signTx(unsignedTx);
 
-    console.log("Submitting Tx");
-    const txHash = await txBuilder.submitTx(signedTx);
+      console.log("Tx built successfully:", signedTx);
 
-    console.log("Transaction submitted successfully:", txHash);
-  // } catch (error) {
-  //   console.error("Error building or submitting transaction:", error);
-  //   setMessage("Transaction failed. Check the console for more details.");
-  // }
+      console.log("Submitting Tx");
+      const txHash = await txBuilder.submitTx(signedTx);
+
+      console.log("Transaction submitted successfully:", txHash);
+    } catch (error) {
+      console.error("Error building or submitting transaction:", error);
+      setMessage("Transaction failed. Check the console for more details.");
+    }
   }
 
   return (
@@ -133,5 +126,6 @@ export const TransactionButton = () => {
         </Typography>
       )}
     </Container>
-   );
+  );
 };
+
