@@ -2,86 +2,171 @@
 
 import { useState } from "react";
 import { useWallet } from "@meshsdk/react";
-import { BlockfrostProvider, deserializeAddress, Transaction, TransactionOptions } from "@meshsdk/core";
-import { Button, TextField, Box, Typography, Container, Alert } from "@mui/material";
+import { BlockfrostProvider, deserializeAddress } from "@meshsdk/core";
+import { Button, TextField, Box, Typography, Container ,Table, TableBody, TableCell, TableContainer, TableRow, Paper } from "@mui/material";
+import * as CLS from "@emurgo/cardano-serialization-lib-browser";
+import ReactJsonPretty from 'react-json-pretty';
 
+const decodeTransaction = async (unsignedTransactionHex: string) => {
+  try {
+    const unsignedTransaction = await CLS.Transaction.from_hex(unsignedTransactionHex);
+    console.log("signers list", unsignedTransaction.body().required_signers()?.to_json());
+    return unsignedTransaction;
+  } catch (error) {
+    console.error("Error decoding transaction:", error);
+    return null;
+  }
+};
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
-  const [unsignedTransaction, setUnsignedTransaction] = useState("");
+  const [unsignedTransactionHex, setUnsignedTransactionHex] = useState("");
+  const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
+  const { wallet, connected, name, connect, disconnect } = useWallet();
+  const [signiture, setSigniture] = useState<string>("");
+  const [isPartOfSigners, setIsPartOfSigners] = useState(false);
 
-  const { wallet, connected, name, connect, disconnect, error } = useWallet();
+  const blockchainProvider = new BlockfrostProvider('');
 
-  // const blockchainProvider = new BlockfrostProvider(process.env.BLOCKFROST_PREVIEW_API||'');
-  const blockchainProvider = new BlockfrostProvider('')
-
-  const buildAndSubmitTransaction = async () => {
-
-    // Get change address from connected wallet
-    // extract payment and stake credentials from change address
-    const changeAddress = await wallet.getChangeAddress();
-    const paymentCred = deserializeAddress(changeAddress).pubKeyHash;
-    console.log("Connected wallet payment credential:", paymentCred);
-
-    const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
-    console.log("Connected wallet stake credential:", stakeCred);
+  const checkTransaction = async () => {
+    if (!connected) {
+      setMessage("Please connect your wallet first.");
+      return;
+    }
 
     const network = await wallet.getNetworkId();
     console.log("Connected wallet network ID:", network);
+    console.log("isPartOfSigners:", isPartOfSigners);
 
-    // Try to take the transaction input and pass to wallet to sign
-    try {
+    const unsignedTransaction=await decodeTransaction(unsignedTransactionHex);
+    console.log("local unsignedTransaction:", unsignedTransaction);
+    setUnsignedTransaction( unsignedTransaction);
+    console.log("unsignedTransaction:", unsignedTransaction);
+    const changeAddress = await wallet.getChangeAddress();
+    const paymentCred=deserializeAddress(changeAddress).pubKeyHash;
+    const stakeCred=deserializeAddress(changeAddress).stakeCredentialHash;
 
-      // take the unsigned tx
-      // const unsignedTx = new Transaction({})
+    console.log("Payment Credential:", paymentCred);
+    console.log("Stake Credential:", stakeCred);
+    const requiredSigners = unsignedTransaction?.body().required_signers();
+
+    console.log("Required signers in the transaction:", requiredSigners?.to_json());
+
+    if (!requiredSigners || requiredSigners.len() === 0) {
+      console.log("No required signers in the transaction.");
+      return "No required signers in the transaction.";
       
-      // display the unsigned tx
+    }else if (requiredSigners?.to_json().includes(stakeCred) || requiredSigners?.to_json().includes(paymentCred)){
+      console.log("Required signers in the transaction:", requiredSigners?.to_json());
+      setIsPartOfSigners(true);
 
-      // validate the unsigned tx
+      return "Required signers in the transaction.";
+    }
 
-      // pass the tx to the wallet to sign
+  
+  };
 
-      console.log("Signing Tx");
-      // const signedTx = await wallet.signTx(unsignedTx, true);
-
-      // console.log("Tx built successfully:", signedTx);
-
+  const signTransaction = async () => {
+    console.log("isPartOfSigners:", isPartOfSigners);
+    try {
+      if (isPartOfSigners) {
+        const signedTx = await wallet.signTx(unsignedTransactionHex, true);
+        console.log("Transaction signed successfully:", signedTx);
+        const signiture = await decodeTransaction(signedTx);
+        setSigniture(signiture?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
+        console.log("Signiture:", signiture?.witness_set().vkeys()?.get(0).signature().to_hex());
+      }
+      else {throw new Error("You are not part of the required signers.");}
     } catch (error) {
       console.error("Error signing transaction:", error);
       setMessage("Transaction signing failed. Check the console for more details.");
     }
-  }
+  };
 
   return (
-
-    <Container maxWidth="sm" sx={{ mt: 5 }}>
-
-      <Box component="form" noValidate autoComplete="off" sx={{ mb: 3 }}>
-        <TextField
-          type="string"
-          label="Enter hex encoded transaction"
-          variant="outlined"
-          fullWidth
-          value={unsignedTransaction}
-          onChange={(e) => setUnsignedTransaction(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <Button
-          variant="contained"
-          color="success"
-          fullWidth
-          onClick={buildAndSubmitTransaction}
-        >
-          Pass transaction to wallet to sign
-        </Button>
+    
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+    {/* Transaction Input & Button */}
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <TextField
+        type="string"
+        label="Enter Hex Encoded Transaction"
+        variant="outlined"
+        fullWidth
+        value={unsignedTransactionHex}
+        onChange={(e) => setUnsignedTransactionHex(e.target.value)}
+      />
+      <Button 
+        variant="contained" 
+        color="success" 
+        onClick={checkTransaction} 
+        sx={{ whiteSpace: "nowrap", px: 3 }}
+      >
+        Check Transaction
+      </Button>
+    </Box>
+  
+    {/* Transaction Details */}
+    <Box sx={{ mt: 3 }}>
+      <Typography variant="h6">Transaction Details</Typography>
+      <Box
+        sx={{
+          backgroundColor: "#f5f5f5",
+          padding: 2,
+          borderRadius: 1,
+          maxHeight: "400px",
+          overflowY: "auto",
+          marginTop: 2,
+          boxShadow: 1,
+        }}
+      >
+        <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />
       </Box>
-
-      {message && (
-        <Typography variant="body1" color="success.main" sx={{ mt: 2 }}>
-          {message}
-        </Typography>
-      )}
-    </Container>
+    </Box>
+  
+    {/* Sign Button - Aligned to Right */}
+    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+      <Button 
+       variant="contained" 
+       color="success" 
+       onClick={signTransaction} 
+       sx={{ whiteSpace: "nowrap", px: 3 }}
+      >
+        Sign Transaction
+      </Button>
+    </Box>
+  
+    {/* Signature Display */}
+    {signiture && (
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6">Signature</Typography>
+        <Box
+          sx={{
+            backgroundColor: "#e8f5e9",
+            padding: 2,
+            borderRadius: 1,
+            whiteSpace: "pre-wrap",
+            wordWrap: "break-word",
+            boxShadow: 2,
+            maxHeight: "250px",
+            overflowY: "auto",
+          }}
+        >
+          <Typography component="pre">{signiture}</Typography>
+        </Box>
+      </Box>
+    )}
+  
+    {/* Error Message Display */}
+    {message && (
+      <Typography variant="body1" color="error" sx={{ mt: 2 }}>
+        {message}
+      </Typography>
+    )}
+  </Container>
+  
+    
   );
 };
+
 
