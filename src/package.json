@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@emurgo/cardano-serialization-lib-browser": "^13.2.1",
     "@meshsdk/core": "^1.7.13",
     "@meshsdk/react": "^1.7.13",
     "@mui/material": "^6.3.1",
