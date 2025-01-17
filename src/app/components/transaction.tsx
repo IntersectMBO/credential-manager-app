@@ -101,7 +101,7 @@ export const TransactionButton = () => {
         onClick={checkTransaction} 
         sx={{ whiteSpace: "nowrap", px: 3 }}
       >
-        Check Transaction
+        Inspect Transaction
       </Button>
     </Box>
   
