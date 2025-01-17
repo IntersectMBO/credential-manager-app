@@ -7,14 +7,14 @@ import { Button, TextField, Box, Typography, Container ,Table, TableBody, TableC
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 
-const decodeTransaction = async (unsignedTransactionHex: string) => {
+const decodeTransaction =  (unsignedTransactionHex: string) => {
   try {
-    const unsignedTransaction = await CLS.Transaction.from_hex(unsignedTransactionHex);
+    const unsignedTransaction =  CLS.Transaction.from_hex(unsignedTransactionHex);
     console.log("signers list", unsignedTransaction.body().required_signers()?.to_json());
     return unsignedTransaction;
   } catch (error) {
     console.error("Error decoding transaction:", error);
-    return error;
+    return null;
   }
 };
 
@@ -23,7 +23,7 @@ export const TransactionButton = () => {
   const [unsignedTransactionHex, setUnsignedTransactionHex] = useState("");
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
-  const [signiture, setSigniture] = useState<string>("");
+  const [signature, setsignature] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
 
 
@@ -37,10 +37,12 @@ export const TransactionButton = () => {
     console.log("Connected wallet network ID:", network);
     console.log("isPartOfSigners:", isPartOfSigners);
 
-    const unsignedTransaction=await decodeTransaction(unsignedTransactionHex);
+    const unsignedTransaction= decodeTransaction(unsignedTransactionHex);
     console.log("local unsignedTransaction:", unsignedTransaction);
     setUnsignedTransaction( unsignedTransaction);
+
     console.log("unsignedTransaction:", unsignedTransaction);
+
     const changeAddress = await wallet.getChangeAddress();
     const paymentCred=deserializeAddress(changeAddress).pubKeyHash;
     const stakeCred=deserializeAddress(changeAddress).stakeCredentialHash;
@@ -71,9 +73,9 @@ export const TransactionButton = () => {
       if (isPartOfSigners) {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
-        const signiture = await decodeTransaction(signedTx);
-        setSigniture(signiture?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
-        console.log("Signiture:", signiture?.witness_set().vkeys()?.get(0).signature().to_hex());
+        const signature = await decodeTransaction(signedTx);
+        setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
+        console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
       }
       else {throw new Error("You are not part of the required signers.");}
     } catch (error) {
@@ -101,13 +103,17 @@ export const TransactionButton = () => {
         onClick={checkTransaction} 
         sx={{ whiteSpace: "nowrap", px: 3 }}
       >
-        Inspect Transaction
+        Check Transaction
       </Button>
     </Box>
   
     {/* Transaction Details */}
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6">Transaction Details</Typography>
+      <p>
+          <span style={{ fontWeight: "bold" }}>Wallet needs to sign?: </span>
+          {isPartOfSigners ? "✅" : "❌"}
+        </p>
       <Box
         sx={{
           backgroundColor: "#f5f5f5",
@@ -136,7 +142,7 @@ export const TransactionButton = () => {
     </Box>
   
     {/* Signature Display */}
-    {signiture && (
+    {signature && (
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6">Signature</Typography>
         <Box
@@ -151,7 +157,7 @@ export const TransactionButton = () => {
             overflowY: "auto",
           }}
         >
-          <Typography component="pre">{signiture}</Typography>
+          <Typography component="pre">{signature}</Typography>
         </Box>
       </Box>
     )}
