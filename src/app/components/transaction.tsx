@@ -14,7 +14,7 @@ const decodeTransaction = async (unsignedTransactionHex: string) => {
     return unsignedTransaction;
   } catch (error) {
     console.error("Error decoding transaction:", error);
-    return null;
+    return error;
   }
 };
 
