@@ -26,7 +26,6 @@ export const TransactionButton = () => {
   const [signiture, setSigniture] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
 
-  const blockchainProvider = new BlockfrostProvider('');
 
   const checkTransaction = async () => {
     if (!connected) {
