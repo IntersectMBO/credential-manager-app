@@ -27,6 +27,9 @@ export const TransactionButton = () => {
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
+  const [isOneVote, setIsOneVote] = useState(false);
+  const [hasCertificates, setHasCertificates] = useState(false);
+  const [isSameNetwork, setIsSameNetwork] = useState(false);
 
 
 
@@ -51,19 +54,59 @@ export const TransactionButton = () => {
 
     console.log("Payment Credential:", paymentCred);
     console.log("Stake Credential:", stakeCred);
-    const requiredSigners = unsignedTransaction?.body().required_signers();
 
-    console.log("Required signers in the transaction:", requiredSigners?.to_json());
+    //**************************************Validation Checks****************************************
 
-    if (!requiredSigners || requiredSigners.len() === 0) {
-      console.log("No required signers in the transaction.");
+    const transactionBody = unsignedTransaction?.body();
+    try{
+      const transactionBody = unsignedTransaction?.body();
+      if (!transactionBody) {
+        throw new Error("Transaction body is null.");
+      }
+      //wallet needs to sign
+      const requiredSigners = transactionBody.required_signers();
+      if (!requiredSigners || requiredSigners.len() === 0) {
+        console.log("No required signers in the transaction.");
+  
+      } else if (requiredSigners?.to_json().includes(stakeCred) || requiredSigners?.to_json().includes(paymentCred)) {
+        console.log("Required signers in the transaction:", requiredSigners?.to_json());
+        setIsPartOfSigners(true);
+      }
 
-    } else if (requiredSigners?.to_json().includes(stakeCred) || requiredSigners?.to_json().includes(paymentCred)) {
-      console.log("Required signers in the transaction:", requiredSigners?.to_json());
-      setIsPartOfSigners(true);
+      //one vote 
+      
+      const votesNumber = unsignedTransaction?.body()?.to_js_value().voting_procedures?.[0]?.votes?.length || -1;
+      if(votesNumber === 1){
+        setIsOneVote(true);
+        console.log("Transaction has one vote.");
+      }else if (votesNumber < 0){
+        throw new Error("Transaction has no votes.");
+      }else{
+        throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
+      }
+      
+      // No certificates
+      const certificates = unsignedTransaction?.body()?.certs() || null;
+      console.log("certificates:", certificates);
+      if (certificates === null) {
+        console.log("No certificates in the transaction.");
+        setHasCertificates(true);
+      }
+
+      //Same network
+      const transactionNetworkID= transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1")?0:1;
+      console.log('transactionNetwork:',transactionNetworkID);
+      if (network === transactionNetworkID ) {
+        setIsSameNetwork(true);
+      }
+      
+      //Is Intersect CC credential
+      //for future add context of some of the 
     }
-
-
+    catch (error) {
+      console.error("Error validating transaction:", error);
+    }
+   
   };
 
   const signTransaction = async () => {
@@ -81,7 +124,7 @@ export const TransactionButton = () => {
 
     } catch (error) {
       console.error("Error signing transaction:", error);
-      setMessage("Transaction signing failed. Check the console for more details.");
+      setMessage("Transaction signing failed. " + error);
     }
   };
 
