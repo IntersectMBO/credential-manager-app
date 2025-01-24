@@ -88,7 +88,7 @@ export const TransactionButton = () => {
         //throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
       }
       
-      // No certificates
+      // Check to see if the transactions has any certificates in it
       const certificates = transactionBody?.certs();
       console.log("certificates:", certificates);
       if (!certificates) {
