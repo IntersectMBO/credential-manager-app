@@ -51,10 +51,8 @@ export const TransactionButton = () => {
     console.log("unsignedTransaction:", unsignedTransaction);
 
     const changeAddress = await wallet.getChangeAddress();
-    const paymentCred = deserializeAddress(changeAddress).pubKeyHash;
     const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
 
-    console.log("Payment Credential:", paymentCred);
     console.log("Stake Credential:", stakeCred);
 
     //**************************************Transaction Validation Checks****************************************
@@ -71,18 +69,18 @@ export const TransactionButton = () => {
       if (!requiredSigners || requiredSigners.len() === 0) {
         console.log("No required signers in the transaction.");
   
-      } else if (requiredSigners?.to_json().includes(stakeCred) || requiredSigners?.to_json().includes(paymentCred)) {
+      } else if (requiredSigners?.to_json().includes(stakeCred) ) {
         console.log("Required signers in the transaction:", requiredSigners?.to_json());
         setIsPartOfSigners(true);
       } 
 
       //one vote 
       
-      const votesNumber = voting_procedures?.[0]?.votes?.length || -1;
+      const votesNumber = voting_procedures?.[0]?.votes?.length;
       if(votesNumber === 1){
         setIsOneVote(true);
         console.log("Transaction has one vote.");
-      }else if (votesNumber < 0){
+      }else if (!votesNumber){
         throw new Error("Transaction has no votes.");
       }else{
         //throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
@@ -107,43 +105,51 @@ export const TransactionButton = () => {
       //Is Intersect CC credential
       const voterJSON = voting_procedures?.[0]?.voter;
       console.log("voterJSON:", voterJSON);
-      let key;
+      let script;
+      // Function to check if the voterJSON has ConstitutionalCommitteeHotCred to avoid type error
       function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
         return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
       }
+
       if (voterJSON && isConstitutionalCommitteeHotCred(voterJSON)) {
         // If it has ConstitutionalCommitteeHotCred, extract the Script hex
         const credType = voterJSON.ConstitutionalCommitteeHotCred;
-        key = credType.Script;
-        console.log("ConstitutionalCommitteeHotCred Key:", key);
+        script = credType.Script;
+        console.log("ConstitutionalCommitteeHotCred Script:", script);
+        
       }
-      if (network === 0 && key === "4f00984fa72e265b8ff8ffce4405da562cd3d6b16a4a38de3372eeea") {
+      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
+      if (network === 0 && script === "4f00984fa72e265b8ff8ffce4405da562cd3d6b16a4a38de3372eeea") {
         console.log("Intersect CC Credential found in testnet");
         setHasICCCredentials(true);
-      } else if (network === 1 && key === "85c47dd4b9a2e70e88965d91dd69be182d5605b23bb5250b1c94bf64") {
+      } else if (network === 1 && script === "85c47dd4b9a2e70e88965d91dd69be182d5605b23bb5250b1c94bf64") {
         console.log("Intersect CC Credential found in mainnet");
         setHasICCCredentials(true);
       } else {
         console.error("Incorrect Intersect CC Credentials");
       }
-      //plutus
+      //check if signer is in plutus data
       const plutusScripts = transactionBody?.outputs().to_js_value();
       console.log("plutusScripts:", plutusScripts);
+      console.log("stakeCred:", stakeCred);
+      
+      if (Array.isArray(plutusScripts) && stakeCred) {
 
-      if (Array.isArray(plutusScripts)) {
-        const regex = new RegExp(signature);
+        const regex = new RegExp(stakeCred);
+        
         plutusScripts.forEach((output, index) => {
           if (output.plutus_data && typeof output.plutus_data === 'object' && 'Data' in output.plutus_data) {
             const plutusData = output.plutus_data.Data;
             console.log("plutusData:", plutusData);
+
             if (regex.test(plutusData)) {
-              console.log(`Signature found in output ${index}`);
+              console.log(`Stake credential found in output for address ${output.address}`);
               setIsInOutputPlutusData(true);
             }
           } else if (!output.plutus_data) {
             console.log(`No plutus data found in output`);
           } else {
-            console.log(`Signiture not found on plutus script data`);
+            console.log(`Stake credential not found on plutus script data for address ${output.address}`);
           }
         });
 
