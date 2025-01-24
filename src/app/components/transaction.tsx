@@ -107,7 +107,7 @@ export const TransactionButton = () => {
       //Is Intersect CC credential
       const voterJSON = voting_procedures?.[0]?.voter;
       console.log("voterJSON:", voterJSON);
-      let key = "";
+      let key;
       function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
         return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
       }
