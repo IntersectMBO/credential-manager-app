@@ -8,17 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 As a minor extension, we also keep a semantic version for the `UNRELEASED`
 changes.
 
-## [tag-xxxx](https://github.com/IntersectMBO/xxxx/releases/tag/xxxx) 2024-xx-xx
+## Version X.X - In Progress 
 
 ### Added
+
 -
 
 ### Fixed
+
 -
 
 ### Changed
+
 - 
 
 ### Removed
+
 -
+
+## [Version 0.1](https://github.com/IntersectMBO/credential-manager-app/releases/tag/v0.1) 2025-01-17
+
 
