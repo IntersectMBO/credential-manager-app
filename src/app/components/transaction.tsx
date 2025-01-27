@@ -27,6 +27,11 @@ export const TransactionButton = () => {
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
+  const [isOneVote, setIsOneVote] = useState(false);
+  const [hasCertificates, setHasCertificates] = useState(false);
+  const [isSameNetwork, setIsSameNetwork] = useState(false);
+  const [hasICCCredentials, setHasICCCredentials] = useState(false);
+  const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
 
 
 
@@ -46,26 +51,121 @@ export const TransactionButton = () => {
     console.log("unsignedTransaction:", unsignedTransaction);
 
     const changeAddress = await wallet.getChangeAddress();
-    const paymentCred = deserializeAddress(changeAddress).pubKeyHash;
     const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
 
-    console.log("Payment Credential:", paymentCred);
     console.log("Stake Credential:", stakeCred);
-    const requiredSigners = unsignedTransaction?.body().required_signers();
 
-    console.log("Required signers in the transaction:", requiredSigners?.to_json());
+    //**************************************Transaction Validation Checks****************************************
 
-    if (!requiredSigners || requiredSigners.len() === 0) {
-      console.log("No required signers in the transaction.");
+    const transactionBody = unsignedTransaction?.body();
+    const voting_procedures= transactionBody?.to_js_value().voting_procedures;
+    try{
+      if (!transactionBody) {
+        throw new Error("Transaction body is null.");
+      }
+      //wallet needs to sign
+      // Check if signer part of plutus output data
+      const requiredSigners = transactionBody.required_signers();
+      if (!requiredSigners || requiredSigners.len() === 0) {
+        console.log("No required signers in the transaction.");
+  
+      } else if (requiredSigners?.to_json().includes(stakeCred) ) {
+        console.log("Required signers in the transaction:", requiredSigners?.to_json());
+        setIsPartOfSigners(true);
+      } 
 
-    } else if (requiredSigners?.to_json().includes(stakeCred) || requiredSigners?.to_json().includes(paymentCred)) {
-      console.log("Required signers in the transaction:", requiredSigners?.to_json());
-      setIsPartOfSigners(true);
+      //one vote 
+      
+      const votesNumber = voting_procedures?.[0]?.votes?.length;
+      if(votesNumber === 1){
+        setIsOneVote(true);
+        console.log("Transaction has one vote.");
+      }else if (!votesNumber){
+        throw new Error("Transaction has no votes.");
+      }else{
+        //throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
+      }
+      
+      // Check to see if the transactions has any certificates in it
+      const certificates = transactionBody?.certs();
+      console.log("certificates:", certificates);
+      if (!certificates) {
+        console.log("No certificates in the transaction.");
+        setHasCertificates(true);
+      }
+
+      //Same network
+      const transactionNetworkID= transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1")?0:1;
+      console.log('transactionNetwork:',transactionNetworkID);
+      if (network === transactionNetworkID ) {
+        setIsSameNetwork(true);
+      }
+      
+      
+      //Is Intersect CC credential
+      const voterJSON = voting_procedures?.[0]?.voter;
+      console.log("voterJSON:", voterJSON);
+      let script;
+      // Function to check if the voterJSON has ConstitutionalCommitteeHotCred to avoid type error
+      function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
+        return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
+      }
+
+      if (voterJSON && isConstitutionalCommitteeHotCred(voterJSON)) {
+        // If it has ConstitutionalCommitteeHotCred, extract the Script hex
+        const credType = voterJSON.ConstitutionalCommitteeHotCred;
+        script = credType.Script;
+        console.log("ConstitutionalCommitteeHotCred Script:", script);
+        
+      }
+      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
+      if (network === 0 && script === "4f00984fa72e265b8ff8ffce4405da562cd3d6b16a4a38de3372eeea") {
+        console.log("Intersect CC Credential found in testnet");
+        setHasICCCredentials(true);
+      } else if (network === 1 && script === "85c47dd4b9a2e70e88965d91dd69be182d5605b23bb5250b1c94bf64") {
+        console.log("Intersect CC Credential found in mainnet");
+        setHasICCCredentials(true);
+      } else {
+        console.error("Incorrect Intersect CC Credentials");
+      }
+      //check if signer is in plutus data
+      const plutusScripts = transactionBody?.outputs().to_js_value();
+      console.log("plutusScripts:", plutusScripts);
+      console.log("stakeCred:", stakeCred);
+      
+      if (Array.isArray(plutusScripts) && stakeCred) {
+
+        const regex = new RegExp(stakeCred);
+        
+        plutusScripts.forEach((output, index) => {
+          if (output.plutus_data && typeof output.plutus_data === 'object' && 'Data' in output.plutus_data) {
+            const plutusData = output.plutus_data.Data;
+            console.log("plutusData:", plutusData);
+
+            if (regex.test(plutusData)) {
+              console.log(`Stake credential found in output for address ${output.address}`);
+              setIsInOutputPlutusData(true);
+            }
+          } else if (!output.plutus_data) {
+            console.log(`No plutus data found in output`);
+          } else {
+            console.log(`Stake credential not found on plutus script data for address ${output.address}`);
+          }
+        });
+
+      } else {
+        console.error("Transaction outputs are not available ");
+      }
+      
+
+      //for future add context of some of the 
     }
-
-
+    catch (error) {
+      console.error("Error validating transaction:", error);
+    }
+   
   };
-
+ 
   const signTransaction = async () => {
     console.log("isPartOfSigners:", isPartOfSigners);
     try {
@@ -76,12 +176,13 @@ export const TransactionButton = () => {
         const signature = await decodeTransaction(signedTx);
         setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
         console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
+        
       }
       else { throw new Error("You are not part of the required signers."); }
 
     } catch (error) {
       console.error("Error signing transaction:", error);
-      setMessage("Transaction signing failed. Check the console for more details.");
+      setMessage("Transaction signing failed. " + error);
     }
   };
 

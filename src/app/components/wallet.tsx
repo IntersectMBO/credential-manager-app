@@ -50,7 +50,7 @@ export const Wallet = () => {
       };
 
       handleWalletConnection();
-    }, [wallet,connected, name, ,paymentCred, stakeCred]);
+    }, [wallet,connected, name]);
 
     return <WalletComponent />;
   };
