@@ -28,11 +28,12 @@ export const TransactionButton = () => {
   const [signature, setsignature] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
   const [isOneVote, setIsOneVote] = useState(false);
-  const [hasCertificates, setHasCertificates] = useState(false);
+  const [hasCertificates, setHasCertificates] = useState(true);
   const [isSameNetwork, setIsSameNetwork] = useState(false);
   const [hasICCCredentials, setHasICCCredentials] = useState(false);
   const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
-
+  const [voteResult, setVoteResult] = useState<string>();
+  const [voteID, setVoteID] = useState<string>();
 
 
   const checkTransaction = async () => {
@@ -59,6 +60,7 @@ export const TransactionButton = () => {
 
     const transactionBody = unsignedTransaction?.body();
     const voting_procedures= transactionBody?.to_js_value().voting_procedures;
+  
     try{
       if (!transactionBody) {
         throw new Error("Transaction body is null.");
@@ -75,11 +77,14 @@ export const TransactionButton = () => {
       } 
 
       //one vote 
-      
-      const votesNumber = voting_procedures?.[0]?.votes?.length;
+      const votes=voting_procedures?.[0]?.votes;
+      const votesNumber = votes?.length;
+    
       if(votesNumber === 1){
         setIsOneVote(true);
-        console.log("Transaction has one vote.");
+        setVoteResult(votes?.[0].voting_procedure.vote);
+        setVoteID(votes?.[0].action_id.transaction_id);
+        console.log("Transaction has one vote set to:",voteResult);
       }else if (!votesNumber){
         throw new Error("Transaction has no votes.");
       }else{
@@ -91,7 +96,7 @@ export const TransactionButton = () => {
       console.log("certificates:", certificates);
       if (!certificates) {
         console.log("No certificates in the transaction.");
-        setHasCertificates(true);
+        setHasCertificates(false);
       }
 
       //Same network
@@ -228,10 +233,51 @@ export const TransactionButton = () => {
       {/* Transaction Details */}
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Transaction Details</Typography>
-        <p>
-          <span style={{ fontWeight: "bold" }}>Wallet needs to sign?: </span>
-          {isPartOfSigners ? "✅" : "❌"}
-        </p>
+        
+       {unsignedTransaction && <Box display="flex" flexWrap="wrap" gap={2}>
+  
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Signing one vote?:{isOneVote ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Has no certificates?:{hasCertificates ? "❌":"✅"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Is the transaction in the same network?:{isSameNetwork ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Is stake credential in plutus data?:{isInOutputPlutusData ? "✅" : "❌"}
+          </Typography>
+
+        </Box>}
+        <Typography variant="h6" sx={{ mt: 3 }}>Voting Details</Typography>
+        {unsignedTransaction && <TableContainer sx={{ mb: 3 }}>
+            <Table sx={{ mt: 3 }}>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Voting on vote ID </TableCell>
+                  <TableCell>{voteID}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Vote </TableCell>
+                  <TableCell>{voteResult}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+        }
         <Box
           sx={{
             backgroundColor: "#f5f5f5",
@@ -244,6 +290,7 @@ export const TransactionButton = () => {
           }}
         >
           <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />
+          
         </Box>
       </Box>
 

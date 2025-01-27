@@ -12,6 +12,7 @@ export const Wallet = () => {
   const [WalletComponent, setWalletComponent] = useState<any | null>(null);
   const [paymentCred, setPaymentCred] = useState<string | null>(null);
   const [stakeCred, setStakeCred] = useState<string | null>(null);
+  const [walletNetwork, setWalletNetwork] = useState<string | null>(null);
  
   useEffect(() => {
     const run = async () => {
@@ -35,10 +36,13 @@ export const Wallet = () => {
           const pubKey = await wallet.getRegisteredPubStakeKeys();
           console.log("Public key:", pubKey);
           const changeAddress = await wallet.getChangeAddress();
+          const networkId = await wallet.getNetworkId();
 
           setPaymentCred(deserializeAddress(changeAddress).pubKeyHash);
 
           setStakeCred(deserializeAddress(changeAddress).stakeCredentialHash);
+
+          setWalletNetwork(networkId === 0 ? "Testnet" : networkId === 1 ? "Mainnet" : "unknown");
 
           console.log("Payment Credential:", paymentCred);
           console.log("Stake Credential:", stakeCred);
@@ -76,6 +80,10 @@ export const Wallet = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>Stake Credential</TableCell>
                   <TableCell>{stakeCred || "Not Available"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Wallet Network</TableCell>
+                  <TableCell>{walletNetwork || "Not Available"}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
