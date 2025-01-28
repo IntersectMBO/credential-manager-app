@@ -34,6 +34,7 @@ export const TransactionButton = () => {
   const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
   const [voteResult, setVoteResult] = useState<string>();
   const [voteID, setVoteID] = useState<string>();
+  const [cardanoscan, setCardanoscan] = useState<string>();
 
 
   const checkTransaction = async () => {
@@ -172,6 +173,13 @@ export const TransactionButton = () => {
       
 
       //for future add context of some of the 
+
+      //*******Voting Details */
+      if (transactionNetworkID === 0) {
+        setCardanoscan("https://preprod.cardanoscan.io/transaction/");
+      } else if (transactionNetworkID === 1) {
+        setCardanoscan("https://cardanoscan.io/transaction/");
+      }
     }
     catch (error) {
       console.error("Error validating transaction:", error);
@@ -283,8 +291,10 @@ export const TransactionButton = () => {
             <Table sx={{ mt: 3 }}>
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Voting on vote ID </TableCell>
-                  <TableCell>{voteID}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Vote ID </TableCell>
+                  <TableCell>
+                      <a href={`${cardanoscan}${voteID}`} target="_blank">{voteID}</a>
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>Vote </TableCell>
@@ -306,7 +316,7 @@ export const TransactionButton = () => {
             boxShadow: 1,
           }}
         >
-          <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />
+          {unsignedTransactionHex && <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />}
           
         </Box>
       </Box>
@@ -360,8 +370,3 @@ export const TransactionButton = () => {
 
   );
 };
-
-
-
-
-
