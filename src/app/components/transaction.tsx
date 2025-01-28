@@ -38,10 +38,18 @@ export const TransactionButton = () => {
 
   const checkTransaction = async () => {
     if (!connected) {
+      setIsPartOfSigners(false);
+      setIsOneVote(false);
+      setHasCertificates(true);
+      setIsSameNetwork(false);
+      setHasICCCredentials(false);
+      setIsInOutputPlutusData(false);
+      setVoteResult("");
+      setVoteID("");
       setMessage("Please connect your wallet first.");
       return;
     }
-
+    
     const network = await wallet.getNetworkId();
     console.log("Connected wallet network ID:", network);
     console.log("isPartOfSigners:", isPartOfSigners);
@@ -218,7 +226,16 @@ export const TransactionButton = () => {
           variant="outlined"
           fullWidth
           value={unsignedTransactionHex}
-          onChange={(e) => setUnsignedTransactionHex(e.target.value)}
+          onChange={(e) => {setUnsignedTransactionHex(e.target.value);
+            setIsPartOfSigners(false);
+            setIsOneVote(false);
+            setHasCertificates(true);
+            setIsSameNetwork(false);
+            setHasICCCredentials(false);
+            setIsInOutputPlutusData(false);
+            setVoteResult("");
+            setVoteID("")
+            }}
         />
         <Button
           variant="contained"
