@@ -5,7 +5,7 @@ import "@meshsdk/react/styles.css";
 
 export const metadata: Metadata = {
   title: "Intersect Council Toolkit",
-  description: "Intersect Council Toolkit Dapp",
+  description: "Intersect Council Toolkit App",
 };
 
 export default function RootLayout({
