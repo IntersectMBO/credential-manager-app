@@ -1,12 +1,12 @@
 {
-  "name": "credential-manager-app",
-  "version": "0.1",
+  "name": "council-toolkit-app",
+  "version": "1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --max-warnings=0",
     "clean": "rm -rf .next package-lock.json node_modules"
   },
   "dependencies": {
