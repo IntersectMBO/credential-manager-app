@@ -35,6 +35,8 @@ export const TransactionButton = () => {
   const [voteResult, setVoteResult] = useState<string>();
   const [voteID, setVoteID] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
+  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
+  const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
 
 
   const checkTransaction = async () => {
@@ -93,6 +95,8 @@ export const TransactionButton = () => {
         setIsOneVote(true);
         setVoteResult(votes?.[0].voting_procedure.vote);
         setVoteID(votes?.[0].action_id.transaction_id);
+        setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
+        setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
         console.log("Transaction has one vote set to:",voteResult);
       }else if (!votesNumber){
         throw new Error("Transaction has no votes.");
@@ -174,12 +178,14 @@ export const TransactionButton = () => {
 
       //for future add context of some of the 
 
-      //*******Voting Details */
+      //********************************************Voting Details *********************************************************************/
       if (transactionNetworkID === 0) {
         setCardanoscan("https://preprod.cardanoscan.io/transaction/");
       } else if (transactionNetworkID === 1) {
         setCardanoscan("https://cardanoscan.io/transaction/");
       }
+
+      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
@@ -299,6 +305,14 @@ export const TransactionButton = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>Vote </TableCell>
                   <TableCell>{voteResult}</TableCell>
+                </TableRow>
+                <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor URL</TableCell>
+                <TableCell><a href={metadataAnchorURL} target="_blank">{metadataAnchorURL}</a></TableCell>
+                </TableRow>
+                <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor Hash</TableCell>
+                <TableCell>{metadataAnchorHash}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
