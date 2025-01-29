@@ -28,19 +28,31 @@ export const TransactionButton = () => {
   const [signature, setsignature] = useState<string>("");
   const [isPartOfSigners, setIsPartOfSigners] = useState(false);
   const [isOneVote, setIsOneVote] = useState(false);
-  const [hasCertificates, setHasCertificates] = useState(false);
+  const [hasCertificates, setHasCertificates] = useState(true);
   const [isSameNetwork, setIsSameNetwork] = useState(false);
   const [hasICCCredentials, setHasICCCredentials] = useState(false);
   const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
-
+  const [voteResult, setVoteResult] = useState<string>();
+  const [voteID, setVoteID] = useState<string>();
+  const [cardanoscan, setCardanoscan] = useState<string>();
+  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
+  const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
 
 
   const checkTransaction = async () => {
     if (!connected) {
+      setIsPartOfSigners(false);
+      setIsOneVote(false);
+      setHasCertificates(true);
+      setIsSameNetwork(false);
+      setHasICCCredentials(false);
+      setIsInOutputPlutusData(false);
+      setVoteResult("");
+      setVoteID("");
       setMessage("Please connect your wallet first.");
       return;
     }
-
+    
     const network = await wallet.getNetworkId();
     console.log("Connected wallet network ID:", network);
     console.log("isPartOfSigners:", isPartOfSigners);
@@ -59,6 +71,7 @@ export const TransactionButton = () => {
 
     const transactionBody = unsignedTransaction?.body();
     const voting_procedures= transactionBody?.to_js_value().voting_procedures;
+  
     try{
       if (!transactionBody) {
         throw new Error("Transaction body is null.");
@@ -75,11 +88,16 @@ export const TransactionButton = () => {
       } 
 
       //one vote 
-      
-      const votesNumber = voting_procedures?.[0]?.votes?.length;
+      const votes=voting_procedures?.[0]?.votes;
+      const votesNumber = votes?.length;
+    
       if(votesNumber === 1){
         setIsOneVote(true);
-        console.log("Transaction has one vote.");
+        setVoteResult(votes?.[0].voting_procedure.vote);
+        setVoteID(votes?.[0].action_id.transaction_id);
+        setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
+        setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
+        console.log("Transaction has one vote set to:",voteResult);
       }else if (!votesNumber){
         throw new Error("Transaction has no votes.");
       }else{
@@ -91,7 +109,7 @@ export const TransactionButton = () => {
       console.log("certificates:", certificates);
       if (!certificates) {
         console.log("No certificates in the transaction.");
-        setHasCertificates(true);
+        setHasCertificates(false);
       }
 
       //Same network
@@ -159,6 +177,15 @@ export const TransactionButton = () => {
       
 
       //for future add context of some of the 
+
+      //********************************************Voting Details *********************************************************************/
+      if (transactionNetworkID === 0) {
+        setCardanoscan("https://preprod.cardanoscan.io/transaction/");
+      } else if (transactionNetworkID === 1) {
+        setCardanoscan("https://cardanoscan.io/transaction/");
+      }
+
+      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
@@ -213,7 +240,16 @@ export const TransactionButton = () => {
           variant="outlined"
           fullWidth
           value={unsignedTransactionHex}
-          onChange={(e) => setUnsignedTransactionHex(e.target.value)}
+          onChange={(e) => {setUnsignedTransactionHex(e.target.value);
+            setIsPartOfSigners(false);
+            setIsOneVote(false);
+            setHasCertificates(true);
+            setIsSameNetwork(false);
+            setHasICCCredentials(false);
+            setIsInOutputPlutusData(false);
+            setVoteResult("");
+            setVoteID("")
+            }}
         />
         <Button
           variant="contained"
@@ -228,10 +264,61 @@ export const TransactionButton = () => {
       {/* Transaction Details */}
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Transaction Details</Typography>
-        <p>
-          <span style={{ fontWeight: "bold" }}>Wallet needs to sign?: </span>
-          {isPartOfSigners ? "✅" : "❌"}
-        </p>
+        
+       {unsignedTransaction && <Box display="flex" flexWrap="wrap" gap={2}>
+  
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Signing one vote?:{isOneVote ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Has no certificates?:{hasCertificates ? "❌":"✅"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Is the transaction in the same network?:{isSameNetwork ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
+          </Typography>
+
+          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+            Is stake credential in plutus data?:{isInOutputPlutusData ? "✅" : "❌"}
+          </Typography>
+
+        </Box>}
+        <Typography variant="h6" sx={{ mt: 3 }}>Voting Details</Typography>
+        {unsignedTransaction && <TableContainer sx={{ mb: 3 }}>
+            <Table sx={{ mt: 3 }}>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Governance Action ID </TableCell>
+                  <TableCell>
+                      <a href={`${cardanoscan}${voteID}`} target="_blank">{voteID}</a>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Vote Choice </TableCell>
+                  <TableCell>{voteResult}</TableCell>
+                </TableRow>
+                <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor URL</TableCell>
+                <TableCell><a href={metadataAnchorURL} target="_blank">{metadataAnchorURL}</a></TableCell>
+                </TableRow>
+                <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor Hash</TableCell>
+                <TableCell>{metadataAnchorHash}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+        }
         <Box
           sx={{
             backgroundColor: "#f5f5f5",
@@ -243,7 +330,8 @@ export const TransactionButton = () => {
             boxShadow: 1,
           }}
         >
-          <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />
+          {unsignedTransactionHex && <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />}
+          
         </Box>
       </Box>
 
@@ -296,8 +384,3 @@ export const TransactionButton = () => {
 
   );
 };
-
-
-
-
-
