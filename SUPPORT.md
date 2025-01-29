@@ -2,7 +2,7 @@
 
 Should you have any questions or need some help in getting set up, you can use these communication channels to reach the xxxx team and get answers in a way where others can benefit from it as well:
 
-- Github [Discussions](https://github.com/IntersectMBO/credential-manager-app)
+- Github [Discussions](https://github.com/IntersectMBO/council-toolkit-app)
 
 # Reporting a Vulnerability
 
