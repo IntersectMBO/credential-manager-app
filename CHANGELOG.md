@@ -1,4 +1,4 @@
-# credential-manager-app Changelog
+# Intersect Council Toolkit Changelog
 
 All notable changes to this project will be documented in this file.
 

@@ -5,13 +5,6 @@ import { Container, Typography, Box } from "@mui/material";
 
 export default function Home() {
   return (
-    // <main>
-    //   <h1 className="font-bold uppercase mr-auto">Credential Manager App</h1>
-    //   <div className="ml-auto">
-    //     <Wallet />
-    //     <TransactionButton />
-    //   </div>
-    // </main>
     <Box
       sx={{
         backgroundImage: 'url(/background.png)',  
@@ -41,7 +34,7 @@ export default function Home() {
           </svg>
         </Box>
         <Typography variant="h4" component="h1" fontWeight="bold" textTransform="uppercase" mb={3} textAlign="center" paddingTop={2}>
-          Credential Manager App
+          Intersect Council Toolkit
         </Typography>
 
         <Box display="flex" flexDirection="column" alignItems="center" width="100%">

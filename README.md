@@ -1,6 +1,6 @@
-# Credential Manager App
+# Intersect Council Toolkit App
 
-Welcome to the Credential Manager App repository.
+Welcome to the Intersect Council Toolkit App repository.
 
 ## Introduction
 
