@@ -1,6 +1,6 @@
 # Intersect Council Toolkit App
 
-This App will allow Intersect council to be able to vote on governance actions , by connecting their wallet to this app.
+This App will allow Intersect council to be able to vote on governance actions, by connecting their wallet to this app.
 
 ## Table of Contents
 
