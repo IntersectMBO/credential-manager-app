@@ -16,6 +16,7 @@ This App will allow Intersect council to be able to vote on governance actions ,
 4. If the unsigned transaction passes all validity checks you will be able to sign the transaction and get the signature.
 
 ## Architecture
+
 ![Architecture](.public/images/v1-diagram.png)
 
 ## License
