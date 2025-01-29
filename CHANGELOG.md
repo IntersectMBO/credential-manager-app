@@ -26,6 +26,6 @@ changes.
 
 -
 
-## [Version 0.1](https://github.com/IntersectMBO/credential-manager-app/releases/tag/v0.1) 2025-01-17
+## [Version 0.1](https://github.com/IntersectMBO/council-toolkit-app/releases/tag/v0.1) 2025-01-17
 
 
