@@ -50,6 +50,7 @@ export const Wallet = () => {
           console.log("Wallet not connected.");
           setPaymentCred(null);
           setStakeCred(null);
+          setWalletNetwork(null);
         }
       };
 
