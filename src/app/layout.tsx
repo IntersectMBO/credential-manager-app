@@ -4,8 +4,8 @@ import { MeshProviderApp } from "@/providers/meshProvider";
 import "@meshsdk/react/styles.css";
 
 export const metadata: Metadata = {
-  title: "Credential Manager",
-  description: "Intersect Credential Manager Dapp",
+  title: "Intersect Council Toolkit",
+  description: "Intersect Council Toolkit Dapp",
 };
 
 export default function RootLayout({
