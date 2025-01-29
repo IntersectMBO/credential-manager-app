@@ -17,4 +17,4 @@ This App will allow Intersect council to be able to vote on governance actions ,
 
 ## Architecture
 
-![Architecture](.public/images/v1-diagram.png)
+![Architecture](.public/images/v1-architecture.PNG)
