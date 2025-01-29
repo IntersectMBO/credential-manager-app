@@ -297,13 +297,13 @@ export const TransactionButton = () => {
             <Table sx={{ mt: 3 }}>
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Vote ID </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Governance Action ID </TableCell>
                   <TableCell>
                       <a href={`${cardanoscan}${voteID}`} target="_blank">{voteID}</a>
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Vote </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Vote Choice </TableCell>
                   <TableCell>{voteResult}</TableCell>
                 </TableRow>
                 <TableRow>
