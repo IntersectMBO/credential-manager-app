@@ -6,6 +6,11 @@ import { BlockfrostProvider, deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+const NEXT_PUBLIC_REST_IPFS_GATEWAY = process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
 
 // Function to decode an unasigned transaction
 const decodeTransaction = (unsignedTransactionHex: string) => {
@@ -316,7 +321,7 @@ export const TransactionButton = () => {
                 </TableRow>
                 <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor URL</TableCell>
-                <TableCell><a  href={`https://ipfs.io/ipfs/${metadataAnchorURL?.slice(7)}`}   target="_blank">{metadataAnchorURL}</a></TableCell>
+                <TableCell><a  href={`https://${NEXT_PUBLIC_REST_IPFS_GATEWAY}${metadataAnchorURL?.slice(7)}`}   target="_blank">{metadataAnchorURL}</a></TableCell>
                 </TableRow>
                 <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor Hash</TableCell>
