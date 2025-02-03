@@ -34,6 +34,7 @@ export const TransactionButton = () => {
   const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
   const [voteResult, setVoteResult] = useState<string>();
   const [voteID, setVoteID] = useState<string>();
+  const [voterType, setVoterType] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
@@ -49,6 +50,7 @@ export const TransactionButton = () => {
       setIsInOutputPlutusData(false);
       setVoteResult("");
       setVoteID("");
+      setVoterType("");
       setMessage("Please connect your wallet first.");
       return;
     }
@@ -125,6 +127,7 @@ export const TransactionButton = () => {
       console.log("voterJSON:", voterJSON);
       let script;
       // Function to check if the voterJSON has ConstitutionalCommitteeHotCred to avoid type error
+      // Check voter type
       function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
         return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
       }
@@ -133,6 +136,7 @@ export const TransactionButton = () => {
         // If it has ConstitutionalCommitteeHotCred, extract the Script hex
         const credType = voterJSON.ConstitutionalCommitteeHotCred;
         script = credType.Script;
+        setVoterType("Constitutional Committee");
         console.log("ConstitutionalCommitteeHotCred Script:", script);
         
       }
@@ -305,6 +309,10 @@ export const TransactionButton = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>Vote Choice </TableCell>
                   <TableCell>{voteResult}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Voter Type </TableCell>
+                  <TableCell>{voterType}</TableCell>
                 </TableRow>
                 <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor URL</TableCell>
