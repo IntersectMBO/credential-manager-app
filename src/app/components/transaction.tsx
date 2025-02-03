@@ -7,6 +7,7 @@ import { Button, TextField, Box, Typography, Container, Table, TableBody, TableC
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
+import { Underline } from "lucide-react";
 
 dotevn.config();
 
@@ -235,7 +236,6 @@ export const TransactionButton = () => {
   }, [signature,unsignedTransaction]);
 
   return (
-
     <Container maxWidth="md" sx={{ mt: 4 }}>
       {/* Transaction Input & Button */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -245,7 +245,8 @@ export const TransactionButton = () => {
           variant="outlined"
           fullWidth
           value={unsignedTransactionHex}
-          onChange={(e) => {setUnsignedTransactionHex(e.target.value);
+          onChange={(e) => {
+            setUnsignedTransactionHex(e.target.value);
             setIsPartOfSigners(false);
             setIsOneVote(false);
             setHasCertificates(true);
@@ -253,8 +254,8 @@ export const TransactionButton = () => {
             setHasICCCredentials(false);
             setIsInOutputPlutusData(false);
             setVoteResult("");
-            setVoteID("")
-            }}
+            setVoteID("");
+          }}
         />
         <Button
           variant="contained"
@@ -268,62 +269,128 @@ export const TransactionButton = () => {
 
       {/* Transaction Details */}
       <Box sx={{ mt: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Transaction Details</Typography>
-        
-       {unsignedTransaction && <Box display="flex" flexWrap="wrap" gap={2}>
-  
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
-          </Typography>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Transaction Details
+        </Typography>
 
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Signing one vote?:{isOneVote ? "✅" : "❌"}
-          </Typography>
+        {unsignedTransaction && (
+          <Box display="flex" flexWrap="wrap" gap={2}>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
+            </Typography>
 
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Has no certificates?:{hasCertificates ? "❌":"✅"}
-          </Typography>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Signing one vote?:{isOneVote ? "✅" : "❌"}
+            </Typography>
 
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Is the transaction in the same network?:{isSameNetwork ? "✅" : "❌"}
-          </Typography>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Has no certificates?:{hasCertificates ? "❌" : "✅"}
+            </Typography>
 
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
-          </Typography>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Is the transaction in the same network?:
+              {isSameNetwork ? "✅" : "❌"}
+            </Typography>
 
-          <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-            Is stake credential in plutus data?:{isInOutputPlutusData ? "✅" : "❌"}
-          </Typography>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
+            </Typography>
 
-        </Box>}
-        <Typography variant="h6" sx={{ mt: 3 }}>Voting Details</Typography>
-        {unsignedTransaction && <TableContainer sx={{ mb: 3 }}>
+            <Typography
+              display="flex"
+              flexDirection="column"
+              width="45%"
+              variant="body1"
+              fontWeight="bold"
+            >
+              Is stake credential in plutus data?:
+              {isInOutputPlutusData ? "✅" : "❌"}
+            </Typography>
+          </Box>
+        )}
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Voting Details
+        </Typography>
+        {unsignedTransaction && (
+          <TableContainer sx={{ mb: 3 }}>
             <Table sx={{ mt: 3 }}>
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Governance Action ID </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    Governance Action ID{" "}
+                  </TableCell>
                   <TableCell>
-                      <a href={`${cardanoscan}${voteID}`} target="_blank">{voteID}</a>
+                    <a href={`${cardanoscan}${voteID}`} target="_blank">
+                      {voteID}
+                    </a>
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Vote Choice </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    Vote Choice{" "}
+                  </TableCell>
                   <TableCell>{voteResult}</TableCell>
                 </TableRow>
                 <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor URL</TableCell>
-                <TableCell><a href={'https://'+ NEXT_PUBLIC_REST_IPFS_GATEWAY + metadataAnchorURL?.slice(7)} target="_blank">{metadataAnchorURL}</a></TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    Metadata Anchor URL
+                  </TableCell>
+                  <TableCell>
+                    <a
+                      href={
+                        metadataAnchorURL?.startsWith("https://") || metadataAnchorURL?.startsWith("http://")
+                        ? metadataAnchorURL
+                        : metadataAnchorURL?.startsWith("ipfs")
+                        ? "https://" + NEXT_PUBLIC_REST_IPFS_GATEWAY + metadataAnchorURL?.slice(7)
+                        : "https://" + metadataAnchorURL
+                      }
+                      target="_blank"
+                      style={{ color: "blue", textDecoration: "underline" }}
+                    >
+                      {metadataAnchorURL}
+                    </a>
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Metadata Anchor Hash</TableCell>
-                <TableCell>{metadataAnchorHash}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    Metadata Anchor Hash
+                  </TableCell>
+                  <TableCell>{metadataAnchorHash}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
-
-        }
+        )}
         <Box
           sx={{
             backgroundColor: "#f5f5f5",
@@ -335,8 +402,11 @@ export const TransactionButton = () => {
             boxShadow: 1,
           }}
         >
-          {unsignedTransactionHex && <ReactJsonPretty data={unsignedTransaction ? unsignedTransaction.to_json() : {}} />}
-          
+          {unsignedTransactionHex && (
+            <ReactJsonPretty
+              data={unsignedTransaction ? unsignedTransaction.to_json() : {}}
+            />
+          )}
         </Box>
       </Box>
 
@@ -355,7 +425,7 @@ export const TransactionButton = () => {
 
       {/* Signature Display */}
       {signature && (
-        <Box id='signature' sx={{ mt: 3 }}  >
+        <Box id="signature" sx={{ mt: 3 }}>
           <Typography variant="h6">Signature</Typography>
           <Box
             sx={{
@@ -385,7 +455,5 @@ export const TransactionButton = () => {
         </Typography>
       )}
     </Container>
-
-
   );
 };
