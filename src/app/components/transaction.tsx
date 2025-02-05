@@ -8,7 +8,7 @@ import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
 import { Underline } from "lucide-react";
-import {decodeHextoTx} from "../utils/transactionUtils";
+import * as txValidationUtils from "../utils/txValidationUtils";
 
 dotevn.config();
 
@@ -64,17 +64,16 @@ export const TransactionButton = () => {
     }
     
     const network = await wallet.getNetworkId();
-    console.log("Connected wallet network ID:", network);
-    console.log("isPartOfSigners:", isPartOfSigners);
+   
 
-    const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
+    const unsignedTransaction = txValidationUtils.decodeHextoTx(unsignedTransactionHex);
     setUnsignedTransaction(unsignedTransaction);
-
-    console.log("unsignedTransaction:", unsignedTransaction);
-
     const changeAddress = await wallet.getChangeAddress();
     const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
 
+    console.log("Connected wallet network ID:", network);
+    console.log("isPartOfSigners:", isPartOfSigners);
+    console.log("unsignedTransaction:", unsignedTransaction);
     console.log("Stake Credential:", stakeCred);
 
     //**************************************Transaction Validation Checks****************************************
@@ -86,16 +85,12 @@ export const TransactionButton = () => {
       if (!transactionBody) {
         throw new Error("Transaction body is null.");
       }
+      setmetadataAnchorURL(voting_procedures?.[0]?.votes?.[0].voting_procedure.anchor?.anchor_url);
+      setMetadataAnchorHash(voting_procedures?.[0]?.votes?.[0].voting_procedure.anchor?.anchor_data_hash);
       //wallet needs to sign
-      // Check if signer part of plutus output data
-      const requiredSigners = transactionBody.required_signers();
-      if (!requiredSigners || requiredSigners.len() === 0) {
-        console.log("No required signers in the transaction.");
-  
-      } else if (requiredSigners?.to_json().includes(stakeCred) ) {
-        console.log("Required signers in the transaction:", requiredSigners?.to_json());
-        setIsPartOfSigners(true);
-      } 
+      txValidationUtils.isPartOfSigners(transactionBody, stakeCred).then((result) => {
+        setIsPartOfSigners(result);
+      })
 
       //one vote 
       const votes=voting_procedures?.[0]?.votes;
@@ -122,80 +117,22 @@ export const TransactionButton = () => {
       }
       
       // Check to see if the transactions has any certificates in it
-      const certificates = transactionBody?.certs();
-      console.log("certificates:", certificates);
-      if (!certificates) {
-        console.log("No certificates in the transaction.");
-        setHasCertificates(false);
-      }
-
+      setHasCertificates(txValidationUtils.hasCertificates(transactionBody));
       //Same network
-      const transactionNetworkID= transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1")?0:1;
-      console.log('transactionNetwork:',transactionNetworkID);
-      if (network === transactionNetworkID ) {
-        setIsSameNetwork(true);
-      }
-      
-      
+      setIsSameNetwork(txValidationUtils.isSameNetwork(transactionBody, network));
       //Is Intersect CC credential
-      const voterJSON = voting_procedures?.[0]?.voter;
-      console.log("voterJSON:", voterJSON);
-      let script;
-      // Function to check if the voterJSON has ConstitutionalCommitteeHotCred to avoid type error
-      function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
-        return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
-      }
-
-      if (voterJSON && isConstitutionalCommitteeHotCred(voterJSON)) {
-        // If it has ConstitutionalCommitteeHotCred, extract the Script hex
-        const credType = voterJSON.ConstitutionalCommitteeHotCred;
-        script = credType.Script;
-        console.log("ConstitutionalCommitteeHotCred Script:", script);
-        
-      }
-      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
-      if (network === 0 && script === "4f00984fa72e265b8ff8ffce4405da562cd3d6b16a4a38de3372eeea") {
-        console.log("Intersect CC Credential found in testnet");
-        setHasICCCredentials(true);
-      } else if (network === 1 && script === "85c47dd4b9a2e70e88965d91dd69be182d5605b23bb5250b1c94bf64") {
-        console.log("Intersect CC Credential found in mainnet");
-        setHasICCCredentials(true);
-      } else {
-        console.error("Incorrect Intersect CC Credentials");
-      }
-      //check if signer is in plutus data
-      const plutusScripts = transactionBody?.outputs().to_js_value();
-      console.log("plutusScripts:", plutusScripts);
-      console.log("stakeCred:", stakeCred);
       
-      if (Array.isArray(plutusScripts) && stakeCred) {
-
-        const regex = new RegExp(stakeCred);
-        
-        plutusScripts.forEach((output, index) => {
-          if (output.plutus_data && typeof output.plutus_data === 'object' && 'Data' in output.plutus_data) {
-            const plutusData = output.plutus_data.Data;
-            console.log("plutusData:", plutusData);
-
-            if (regex.test(plutusData)) {
-              console.log(`Stake credential found in output for address ${output.address}`);
-              setIsInOutputPlutusData(true);
-            }
-          } else if (!output.plutus_data) {
-            console.log(`No plutus data found in output`);
-          } else {
-            console.log(`Stake credential not found on plutus script data for address ${output.address}`);
-          }
-        });
-
-      } else {
-        console.error("Transaction outputs are not available ");
-      }
+      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
+      setHasICCCredentials( txValidationUtils.hasValidICCCredentials(transactionBody, network));
+      console.log("hasICCCredentials:", hasICCCredentials,txValidationUtils.hasValidICCCredentials(transactionBody, network));
+      
+      //check if signer is in plutus data
       
 
       //for future add context of some of the 
 
       //********************************************Voting Details *********************************************************************/
+      const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       if (transactionNetworkID === 0) {
         setCardanoscan("https://preprod.cardanoscan.io/govAction/");
       } else if (transactionNetworkID === 1) {
@@ -217,7 +154,7 @@ export const TransactionButton = () => {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
 
-        const signature = await decodeHextoTx(signedTx);
+        const signature = await txValidationUtils.decodeHextoTx(signedTx);
         setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
         console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
         
