@@ -9,6 +9,7 @@ import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
 import { Underline } from "lucide-react";
 import * as txValidationUtils from "../utils/txValidationUtils";
+import { TransactionChecks } from "./validationChecks";
 
 dotevn.config();
 
@@ -133,6 +134,14 @@ export const TransactionButton = () => {
 
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
+      const votes=voting_procedures?.[0]?.votes;
+      const votesNumber = votes?.length;
+    
+      setVoteResult(votes?.[0].voting_procedure.vote);
+      setVoteID(votes?.[0].action_id.transaction_id);
+      setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
+      setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
+
       if (transactionNetworkID === 0) {
         setCardanoscan("https://preprod.cardanoscan.io/govAction/");
       } else if (transactionNetworkID === 1) {
@@ -218,73 +227,18 @@ export const TransactionButton = () => {
       {/* Transaction Details */}
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Transaction Details
+          Transaction Validation Checks
         </Typography>
 
         {unsignedTransaction && (
-          <Box display="flex" flexWrap="wrap" gap={2}>
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Signing one vote?:{isOneVote ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Has no certificates?:{hasCertificates ? "❌" : "✅"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Is the transaction in the same network?:
-              {isSameNetwork ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Is stake credential in plutus data?:
-              {isInOutputPlutusData ? "✅" : "❌"}
-            </Typography>
-          </Box>
+            <TransactionChecks
+            isPartOfSigners={isPartOfSigners}
+            isOneVote={isOneVote}
+            hasCertificates={hasCertificates}
+            isSameNetwork={isSameNetwork}
+            hasICCCredentials={hasICCCredentials}
+            isInOutputPlutusData={isInOutputPlutusData}
+          />
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
           Voting Details
