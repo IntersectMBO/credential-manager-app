@@ -8,22 +8,14 @@ import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
 import { Underline } from "lucide-react";
+import {decodeHextoTx} from "../utils/transactionUtils";
 
 dotevn.config();
 
 const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
 
 // Function to decode an unasigned transaction
-const decodeTransaction = (unsignedTransactionHex: string) => {
-  try {
-    const unsignedTransaction = CLS.Transaction.from_hex(unsignedTransactionHex);
-    console.log("signers list", unsignedTransaction.body().required_signers()?.to_json());
-    return unsignedTransaction;
-  } catch (error) {
-    console.error("Error decoding transaction:", error);
-    return null;
-  }
-};
+
 
 // convert basic GA ID to Bech32 as per CIP129 standard
 // https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
@@ -75,7 +67,7 @@ export const TransactionButton = () => {
     console.log("Connected wallet network ID:", network);
     console.log("isPartOfSigners:", isPartOfSigners);
 
-    const unsignedTransaction = decodeTransaction(unsignedTransactionHex);
+    const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
     setUnsignedTransaction(unsignedTransaction);
 
     console.log("unsignedTransaction:", unsignedTransaction);
@@ -225,7 +217,7 @@ export const TransactionButton = () => {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
 
-        const signature = await decodeTransaction(signedTx);
+        const signature = await decodeHextoTx(signedTx);
         setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
         console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
         
