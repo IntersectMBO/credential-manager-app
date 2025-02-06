@@ -24,7 +24,7 @@ export const TransactionButton = () => {
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
   const [voteChoice, setvoteChoice] = useState<string>();
-  const [voteID, setVoteID] = useState<string>();
+  const [govActionID, setgovActionID] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
@@ -51,7 +51,7 @@ export const TransactionButton = () => {
     if (!connected) {
       resetValidationState();
       setvoteChoice("");
-      setVoteID("");
+      setgovActionID("");
       return setMessage("Please connect your wallet first.");
     }
     try{
@@ -92,7 +92,7 @@ export const TransactionButton = () => {
       if (votes && hasOneVote) {
         
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
-        setVoteID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
+        setgovActionID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
         setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
         setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
       }
@@ -160,7 +160,7 @@ export const TransactionButton = () => {
             setUnsignedTransactionHex(e.target.value);
             resetValidationState();
             setvoteChoice("");
-            setVoteID("");
+            setgovActionID("");
           }}
         />
         <Button
@@ -201,8 +201,8 @@ export const TransactionButton = () => {
                     Governance Action ID{" "}
                   </TableCell>
                   <TableCell>
-                    <a href={`${cardanoscan}${voteID}`} target="_blank">
-                      {voteID}
+                    <a href={`${cardanoscan}${govActionID}`} target="_blank">
+                      {govActionID}
                     </a>
                   </TableCell>
                 </TableRow>
