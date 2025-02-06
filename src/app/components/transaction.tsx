@@ -25,6 +25,18 @@ const decodeTransaction = (unsignedTransactionHex: string) => {
   }
 };
 
+// convert basic GA ID to Bech32 as per CIP129 standard
+// https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
+const convertGAToBech = (gaTxHash : string, gaTxIndex : number) => {
+  const bech32 = require('bech32-buffer');
+
+  // convert value index value to hex
+  const indexHex = gaTxIndex.toString(16).padStart(2, '0');
+
+  // return bech32 encoded GA ID
+  return bech32.encode("gov_action", Buffer.from(gaTxHash+indexHex, 'hex')).toString();
+}
+
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
@@ -96,13 +108,12 @@ export const TransactionButton = () => {
       //one vote 
       const votes=voting_procedures?.[0]?.votes;
       const votesNumber = votes?.length;
-    
-      if(votesNumber === 1){
+
+      if(votes && votesNumber === 1){
         setIsOneVote(true);
-        
-        setVoteID(votes?.[0].action_id.transaction_id);
-        setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
-        setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
+        setVoteID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
+        setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
+        setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
         console.log("Transaction has one vote set to:",voteChoice);
 
         if (votes?.[0].voting_procedure.vote==='Yes'){
@@ -194,9 +205,9 @@ export const TransactionButton = () => {
 
       //********************************************Voting Details *********************************************************************/
       if (transactionNetworkID === 0) {
-        setCardanoscan("https://preprod.cardanoscan.io/transaction/");
+        setCardanoscan("https://preprod.cardanoscan.io/govAction/");
       } else if (transactionNetworkID === 1) {
-        setCardanoscan("https://cardanoscan.io/transaction/");
+        setCardanoscan("https://cardanoscan.io/govAction/");
       }
 
       

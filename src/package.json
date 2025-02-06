@@ -16,6 +16,7 @@
     "@meshsdk/core": "^1.7.13",
     "@meshsdk/react": "^1.7.13",
     "@mui/material": "^6.3.1",
+    "bech32-buffer": "^0.2.1",
     "dotenv": "^16.4.7",
     "lucide-react": "^0.462.0",
     "next": "^15.0.3",
