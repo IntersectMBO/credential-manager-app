@@ -10,6 +10,7 @@ import dotevn from "dotenv";
 import { Underline } from "lucide-react";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
+import { decodeHextoTx } from "../utils/txUtils";
 
 dotevn.config();
 
@@ -65,9 +66,7 @@ export const TransactionButton = () => {
     }
     
     const network = await wallet.getNetworkId();
-   
-
-    const unsignedTransaction = txValidationUtils.decodeHextoTx(unsignedTransactionHex);
+    const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
     setUnsignedTransaction(unsignedTransaction);
     const changeAddress = await wallet.getChangeAddress();
     const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
@@ -81,13 +80,11 @@ export const TransactionButton = () => {
 
     const transactionBody = unsignedTransaction?.body();
     const voting_procedures= transactionBody?.to_js_value().voting_procedures;
-  
+
     try{
       if (!transactionBody) {
         throw new Error("Transaction body is null.");
       }
-      setmetadataAnchorURL(voting_procedures?.[0]?.votes?.[0].voting_procedure.anchor?.anchor_url);
-      setMetadataAnchorHash(voting_procedures?.[0]?.votes?.[0].voting_procedure.anchor?.anchor_data_hash);
       //wallet needs to sign
       txValidationUtils.isPartOfSigners(transactionBody, stakeCred).then((result) => {
         setIsPartOfSigners(result);
@@ -122,20 +119,13 @@ export const TransactionButton = () => {
       //Same network
       setIsSameNetwork(txValidationUtils.isSameNetwork(transactionBody, network));
       //Is Intersect CC credential
-      
-      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
       setHasICCCredentials( txValidationUtils.hasValidICCCredentials(transactionBody, network));
-      console.log("hasICCCredentials:", hasICCCredentials,txValidationUtils.hasValidICCCredentials(transactionBody, network));
-      
       //check if signer is in plutus data
-      
-
-      //for future add context of some of the 
+      setIsInOutputPlutusData(txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred));
 
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       const votes=voting_procedures?.[0]?.votes;
-      const votesNumber = votes?.length;
     
       setVoteResult(votes?.[0].voting_procedure.vote);
       setVoteID(votes?.[0].action_id.transaction_id);
@@ -148,7 +138,6 @@ export const TransactionButton = () => {
         setCardanoscan("https://cardanoscan.io/govAction/");
       }
 
-      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
@@ -163,7 +152,7 @@ export const TransactionButton = () => {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
 
-        const signature = await txValidationUtils.decodeHextoTx(signedTx);
+        const signature = await decodeHextoTx(signedTx);
         setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
         console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
         
