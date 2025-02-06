@@ -125,9 +125,9 @@ export const TransactionButton = () => {
 
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
-      const votes=voting_procedures?.[0]?.votes;
+      // const votes=voting_procedures?.[0]?.votes;
     
-      setVoteResult(votes?.[0].voting_procedure.vote);
+      // setvoteChoice(votes?.[0].voting_procedure.vote);
       setVoteID(votes?.[0].action_id.transaction_id);
       setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
       setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
