@@ -23,26 +23,33 @@ export const TransactionButton = () => {
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
-  const [isPartOfSigners, setIsPartOfSigners] = useState(false);
-  const [isOneVote, setIsOneVote] = useState(false);
-  const [hasCertificates, setHasCertificates] = useState(true);
-  const [isSameNetwork, setIsSameNetwork] = useState(false);
-  const [hasICCCredentials, setHasICCCredentials] = useState(false);
-  const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
   const [voteChoice, setvoteChoice] = useState<string>();
   const [voteID, setVoteID] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
-
+  const [validationState, setValidationState] = useState({
+    isPartOfSigners: false,
+    isOneVote: false,
+    hasCertificates: true,
+    isSameNetwork: false,
+    hasICCCredentials: false,
+    isInOutputPlutusData: false,
+  });
+  const resetValidationState = () => {
+    setValidationState((prev) => ({
+      ...prev,
+      isPartOfSigners: false,
+      isOneVote: false,
+      hasCertificates: true,
+      isSameNetwork: false,
+      hasICCCredentials: false,
+      isInOutputPlutusData: false,
+    }));
+  };
   const checkTransaction = async () => {
     if (!connected) {
-      setIsPartOfSigners(false);
-      setIsOneVote(false);
-      setHasCertificates(true);
-      setIsSameNetwork(false);
-      setHasICCCredentials(false);
-      setIsInOutputPlutusData(false);
+      resetValidationState();
       setvoteChoice("");
       setVoteID("");
       return setMessage("Please connect your wallet first.");
@@ -70,14 +77,18 @@ export const TransactionButton = () => {
       const hasOneVote = txValidationUtils.hasOneVoteOnTransaction(transactionBody);
       const vote = voting_procedures[0].votes[0].voting_procedure.vote;
 
-      //wallet needs to sign
-      txValidationUtils.isPartOfSigners(transactionBody, stakeCred).then((result) => {
-        setIsPartOfSigners(result);
-      })
-
-      //Check to see if the transaction has one vote
-      setIsOneVote(hasOneVote);
-
+      setValidationState({
+        isPartOfSigners: await txValidationUtils.isPartOfSigners(transactionBody, stakeCred),
+        isOneVote: hasOneVote,
+        hasCertificates: txValidationUtils.hasCertificates(transactionBody),
+        isSameNetwork: txValidationUtils.isSameNetwork(transactionBody, network),
+        hasICCCredentials: txValidationUtils.hasValidICCCredentials(transactionBody, network),
+        isInOutputPlutusData: txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred),
+      });
+  
+      //********************************************Voting Details *********************************************************************/
+      const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
+      
       if (votes && hasOneVote) {
         
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
@@ -85,18 +96,7 @@ export const TransactionButton = () => {
         setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
         setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
       }
-      // Check to see if the transactions has any certificates in it
-      setHasCertificates(txValidationUtils.hasCertificates(transactionBody));
-      //Same network
-      setIsSameNetwork(txValidationUtils.isSameNetwork(transactionBody, network));
-      //Is Intersect CC credential
-      setHasICCCredentials( txValidationUtils.hasValidICCCredentials(transactionBody, network));
-      //check if signer is in plutus data
-      setIsInOutputPlutusData(txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred));
 
-      //********************************************Voting Details *********************************************************************/
-      const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
-      
       if (transactionNetworkID === 0) {
         setCardanoscan("https://preprod.cardanoscan.io/govAction/");
       } else if (transactionNetworkID === 1) {
@@ -111,9 +111,9 @@ export const TransactionButton = () => {
   };
  
   const signTransaction = async () => {
-    console.log("isPartOfSigners:", isPartOfSigners);
+    console.log("isPartOfSigners:", validationState.isPartOfSigners);
     try {
-      if (isPartOfSigners) {
+      if (validationState.isPartOfSigners) {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
 
@@ -158,12 +158,7 @@ export const TransactionButton = () => {
           value={unsignedTransactionHex}
           onChange={(e) => {
             setUnsignedTransactionHex(e.target.value);
-            setIsPartOfSigners(false);
-            setIsOneVote(false);
-            setHasCertificates(true);
-            setIsSameNetwork(false);
-            setHasICCCredentials(false);
-            setIsInOutputPlutusData(false);
+            resetValidationState();
             setvoteChoice("");
             setVoteID("");
           }}
@@ -186,12 +181,12 @@ export const TransactionButton = () => {
 
         {unsignedTransaction && (
             <TransactionChecks
-            isPartOfSigners={isPartOfSigners}
-            isOneVote={isOneVote}
-            hasCertificates={hasCertificates}
-            isSameNetwork={isSameNetwork}
-            hasICCCredentials={hasICCCredentials}
-            isInOutputPlutusData={isInOutputPlutusData}
+            isPartOfSigners={validationState.isPartOfSigners}
+            isOneVote={validationState.isOneVote}
+            hasCertificates={validationState.hasCertificates}
+            isSameNetwork={validationState.isSameNetwork}
+            hasICCCredentials={validationState.hasICCCredentials}
+            isInOutputPlutusData={validationState.isInOutputPlutusData}
           />
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
