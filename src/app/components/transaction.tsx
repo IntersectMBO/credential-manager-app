@@ -35,7 +35,6 @@ export const TransactionButton = () => {
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
 
-
   const checkTransaction = async () => {
     if (!connected) {
       setIsPartOfSigners(false);
@@ -46,45 +45,41 @@ export const TransactionButton = () => {
       setIsInOutputPlutusData(false);
       setvoteChoice("");
       setVoteID("");
-      setMessage("Please connect your wallet first.");
-      return;
+      return setMessage("Please connect your wallet first.");
     }
-    
-    const network = await wallet.getNetworkId();
-    const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
-    setUnsignedTransaction(unsignedTransaction);
-    const changeAddress = await wallet.getChangeAddress();
-    const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
-
-    console.log("Connected wallet network ID:", network);
-    console.log("isPartOfSigners:", isPartOfSigners);
-    console.log("unsignedTransaction:", unsignedTransaction);
-    console.log("Stake Credential:", stakeCred);
-
-    //**************************************Transaction Validation Checks****************************************
-
-    const transactionBody = unsignedTransaction?.body();
-    const voting_procedures= transactionBody?.to_js_value().voting_procedures;
-
     try{
-      if (!transactionBody) {
-        throw new Error("Transaction body is null.");
-      }
+      const network = await wallet.getNetworkId();
+      const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
+      setUnsignedTransaction(unsignedTransaction);
+      if (!unsignedTransaction) throw new Error("Invalid transaction format.");
+
+      const changeAddress = await wallet.getChangeAddress();
+      const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
+
+      console.log("Connected wallet network ID:", network);
+      console.log("unsignedTransaction:", unsignedTransaction);
+      console.log("Stake Credential:", stakeCred);
+
+      //**************************************Transaction Validation Checks****************************************
+
+      const transactionBody = unsignedTransaction.body();
+      if (!transactionBody) throw new Error("Transaction body is null.");
+      const voting_procedures= transactionBody.to_js_value().voting_procedures;
+      if (!voting_procedures) throw new Error("Transaction has no voting procedures.");
+      const votes=voting_procedures[0].votes;
+      const hasOneVote = txValidationUtils.hasOneVoteOnTransaction(transactionBody);
+      const vote = voting_procedures[0].votes[0].voting_procedure.vote;
+
       //wallet needs to sign
       txValidationUtils.isPartOfSigners(transactionBody, stakeCred).then((result) => {
         setIsPartOfSigners(result);
       })
 
-      //one vote 
-      const votes=voting_procedures?.[0]?.votes;
-      const votesNumber = votes?.length;
-
       //Check to see if the transaction has one vote
-      const hasOneVote = await txValidationUtils.hasOneVoteOnTransaction(transactionBody);
       setIsOneVote(hasOneVote);
 
       if (votes && hasOneVote) {
-        const vote = voting_procedures[0].votes[0].voting_procedure.vote;
+        
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
         setVoteID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
         setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
