@@ -3,13 +3,13 @@
 import { useState,useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
 import { BlockfrostProvider, deserializeAddress } from "@meshsdk/core";
-import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from "@mui/material";
+import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech } from "../utils/txUtils";
+import { decodeHextoTx,convertGAToBech,getCardanoScanURL,openInNewTab } from "../utils/txUtils";
 
 dotevn.config();
 
@@ -89,20 +89,19 @@ export const TransactionButton = () => {
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       
+      
       if (votes && hasOneVote) {
         
+        const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
-        setgovActionID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
-        setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
-        setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
+        setgovActionID(govActionID);
+        if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
+        setmetadataAnchorURL(votes[0].voting_procedure.anchor.anchor_url);
+        setMetadataAnchorHash(votes[0].voting_procedure.anchor.anchor_data_hash);
+        setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
       }
 
-      if (transactionNetworkID === 0) {
-        setCardanoscan("https://preprod.cardanoscan.io/govAction/");
-      } else if (transactionNetworkID === 1) {
-        setCardanoscan("https://cardanoscan.io/govAction/");
-      }
-
+      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
@@ -180,13 +179,7 @@ export const TransactionButton = () => {
         </Typography>
 
         {unsignedTransaction && (
-            <TransactionChecks
-            isPartOfSigners={validationState.isPartOfSigners}
-            isOneVote={validationState.isOneVote}
-            hasCertificates={validationState.hasCertificates}
-            isSameNetwork={validationState.isSameNetwork}
-            hasICCCredentials={validationState.hasICCCredentials}
-            isInOutputPlutusData={validationState.isInOutputPlutusData}
+            <TransactionChecks {...validationState}
           />
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
@@ -201,7 +194,7 @@ export const TransactionButton = () => {
                     Governance Action ID{" "}
                   </TableCell>
                   <TableCell>
-                    <a href={`${cardanoscan}${govActionID}`} target="_blank">
+                    <a href={`${cardanoscan}`} target="_blank">
                       {govActionID}
                     </a>
                   </TableCell>
@@ -217,19 +210,12 @@ export const TransactionButton = () => {
                     Metadata Anchor URL
                   </TableCell>
                   <TableCell>
-                    <a
-                      href={
-                        metadataAnchorURL?.startsWith("https://") || metadataAnchorURL?.startsWith("http://")
-                        ? metadataAnchorURL
-                        : metadataAnchorURL?.startsWith("ipfs")
-                        ? "https://" + NEXT_PUBLIC_REST_IPFS_GATEWAY + metadataAnchorURL?.slice(7)
-                        : "https://" + metadataAnchorURL
-                      }
-                      target="_blank"
+                    <Link
+                      onClick={() => openInNewTab(metadataAnchorURL||"")}
                       style={{ color: "blue", textDecoration: "underline" }}
                     >
                       {metadataAnchorURL}
-                    </a>
+                    </Link>
                   </TableCell>
                 </TableRow>
                 <TableRow>
