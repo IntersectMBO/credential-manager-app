@@ -26,6 +26,7 @@ jobs:
         run: |
           npm install
           npm run build
+          npm run export
         working-directory: ./src
 
       # Step 4: Deploy to GitHub Pages
