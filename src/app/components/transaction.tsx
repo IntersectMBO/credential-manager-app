@@ -38,7 +38,7 @@ export const TransactionButton = () => {
   const [isSameNetwork, setIsSameNetwork] = useState(false);
   const [hasICCCredentials, setHasICCCredentials] = useState(false);
   const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
-  const [voteResult, setVoteResult] = useState<string>();
+  const [voteChoice, setvoteChoice] = useState<string>();
   const [voteID, setVoteID] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
@@ -53,7 +53,7 @@ export const TransactionButton = () => {
       setIsSameNetwork(false);
       setHasICCCredentials(false);
       setIsInOutputPlutusData(false);
-      setVoteResult("");
+      setvoteChoice("");
       setVoteID("");
       setMessage("Please connect your wallet first.");
       return;
@@ -99,11 +99,19 @@ export const TransactionButton = () => {
     
       if(votesNumber === 1){
         setIsOneVote(true);
-        setVoteResult(votes?.[0].voting_procedure.vote);
+        
         setVoteID(votes?.[0].action_id.transaction_id);
         setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
         setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
-        console.log("Transaction has one vote set to:",voteResult);
+        console.log("Transaction has one vote set to:",voteChoice);
+
+        if (votes?.[0].voting_procedure.vote==='Yes'){
+          setvoteChoice('Constitutional');
+        }else if (votes?.[0].voting_procedure.vote==='No'){
+          setvoteChoice('Unconstitutional');
+        }else{
+          setvoteChoice('Abstain');
+        }
       }else if (!votesNumber){
         throw new Error("Transaction has no votes.");
       }else{
@@ -253,7 +261,7 @@ export const TransactionButton = () => {
             setIsSameNetwork(false);
             setHasICCCredentials(false);
             setIsInOutputPlutusData(false);
-            setVoteResult("");
+            setvoteChoice("");
             setVoteID("");
           }}
         />
@@ -359,7 +367,7 @@ export const TransactionButton = () => {
                   <TableCell sx={{ fontWeight: "bold" }}>
                     Vote Choice{" "}
                   </TableCell>
-                  <TableCell>{voteResult}</TableCell>
+                  <TableCell>{voteChoice}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>
