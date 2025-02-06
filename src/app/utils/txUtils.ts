@@ -11,7 +11,6 @@ export const decodeHextoTx = (unsignedTransactionHex: string) => {
     console.log("decodeHextoTx");
     try {
       const unsignedTransaction = CLS.Transaction.from_hex(unsignedTransactionHex);
-      console.log("signers list", unsignedTransaction.body().required_signers()?.to_json());
       return unsignedTransaction;
     } catch (error) {
       console.error("Error decoding transaction:", error);
@@ -19,3 +18,15 @@ export const decodeHextoTx = (unsignedTransactionHex: string) => {
     }
   };
 
+
+// convert basic GA ID to Bech32 as per CIP129 standard
+// https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
+export const convertGAToBech = (gaTxHash : string, gaTxIndex : number) => {
+  const bech32 = require('bech32-buffer');
+
+  // convert value index value to hex
+  const indexHex = gaTxIndex.toString(16).padStart(2, '0');
+
+  // return bech32 encoded GA ID
+  return bech32.encode("gov_action", Buffer.from(gaTxHash+indexHex, 'hex')).toString();
+}

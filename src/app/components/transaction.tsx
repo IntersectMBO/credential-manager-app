@@ -7,29 +7,14 @@ import { Button, TextField, Box, Typography, Container, Table, TableBody, TableC
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
-import { Underline } from "lucide-react";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx } from "../utils/txUtils";
+import { decodeHextoTx,convertGAToBech } from "../utils/txUtils";
 
 dotevn.config();
 
 const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
 
-// Function to decode an unasigned transaction
-
-
-// convert basic GA ID to Bech32 as per CIP129 standard
-// https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
-const convertGAToBech = (gaTxHash : string, gaTxIndex : number) => {
-  const bech32 = require('bech32-buffer');
-
-  // convert value index value to hex
-  const indexHex = gaTxIndex.toString(16).padStart(2, '0');
-
-  // return bech32 encoded GA ID
-  return bech32.encode("gov_action", Buffer.from(gaTxHash+indexHex, 'hex')).toString();
-}
 
 
 export const TransactionButton = () => {
@@ -94,26 +79,17 @@ export const TransactionButton = () => {
       const votes=voting_procedures?.[0]?.votes;
       const votesNumber = votes?.length;
 
-      if(votes && votesNumber === 1){
-        setIsOneVote(true);
+      //Check to see if the transaction has one vote
+      const hasOneVote = await txValidationUtils.hasOneVoteOnTransaction(transactionBody);
+      setIsOneVote(hasOneVote);
+
+      if (votes && hasOneVote) {
+        const vote = voting_procedures[0].votes[0].voting_procedure.vote;
+        setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
         setVoteID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
         setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
         setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
-        console.log("Transaction has one vote set to:",voteChoice);
-
-        if (votes?.[0].voting_procedure.vote==='Yes'){
-          setvoteChoice('Constitutional');
-        }else if (votes?.[0].voting_procedure.vote==='No'){
-          setvoteChoice('Unconstitutional');
-        }else{
-          setvoteChoice('Abstain');
-        }
-      }else if (!votesNumber){
-        throw new Error("Transaction has no votes.");
-      }else{
-        //throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
       }
-      
       // Check to see if the transactions has any certificates in it
       setHasCertificates(txValidationUtils.hasCertificates(transactionBody));
       //Same network
@@ -125,13 +101,7 @@ export const TransactionButton = () => {
 
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
-      // const votes=voting_procedures?.[0]?.votes;
-    
-      // setvoteChoice(votes?.[0].voting_procedure.vote);
-      setVoteID(votes?.[0].action_id.transaction_id);
-      setmetadataAnchorURL(votes?.[0].voting_procedure.anchor?.anchor_url);
-      setMetadataAnchorHash(votes?.[0].voting_procedure.anchor?.anchor_data_hash);
-
+      
       if (transactionNetworkID === 0) {
         setCardanoscan("https://preprod.cardanoscan.io/govAction/");
       } else if (transactionNetworkID === 1) {
