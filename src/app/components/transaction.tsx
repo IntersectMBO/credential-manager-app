@@ -3,39 +3,18 @@
 import { useState,useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
 import { BlockfrostProvider, deserializeAddress } from "@meshsdk/core";
-import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from "@mui/material";
+import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import dotevn from "dotenv";
-import { Underline } from "lucide-react";
+import * as txValidationUtils from "../utils/txValidationUtils";
+import { TransactionChecks } from "./validationChecks";
+import { decodeHextoTx,convertGAToBech,getCardanoScanURL,openInNewTab } from "../utils/txUtils";
 
 dotevn.config();
 
 const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
 
-// Function to decode an unasigned transaction
-const decodeTransaction = (unsignedTransactionHex: string) => {
-  try {
-    const unsignedTransaction = CLS.Transaction.from_hex(unsignedTransactionHex);
-    console.log("signers list", unsignedTransaction.body().required_signers()?.to_json());
-    return unsignedTransaction;
-  } catch (error) {
-    console.error("Error decoding transaction:", error);
-    return null;
-  }
-};
-
-// convert basic GA ID to Bech32 as per CIP129 standard
-// https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
-const convertGAToBech = (gaTxHash : string, gaTxIndex : number) => {
-  const bech32 = require('bech32-buffer');
-
-  // convert value index value to hex
-  const indexHex = gaTxIndex.toString(16).padStart(2, '0');
-
-  // return bech32 encoded GA ID
-  return bech32.encode("gov_action", Buffer.from(gaTxHash+indexHex, 'hex')).toString();
-}
 
 
 export const TransactionButton = () => {
@@ -44,170 +23,82 @@ export const TransactionButton = () => {
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
-  const [isPartOfSigners, setIsPartOfSigners] = useState(false);
-  const [isOneVote, setIsOneVote] = useState(false);
-  const [hasCertificates, setHasCertificates] = useState(true);
-  const [isSameNetwork, setIsSameNetwork] = useState(false);
-  const [hasICCCredentials, setHasICCCredentials] = useState(false);
-  const [isInOutputPlutusData , setIsInOutputPlutusData] = useState(false); 
   const [voteChoice, setvoteChoice] = useState<string>();
-  const [voteID, setVoteID] = useState<string>();
+  const [govActionID, setgovActionID] = useState<string>();
   const [cardanoscan, setCardanoscan] = useState<string>();
   const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
-
-
+  const [validationState, setValidationState] = useState({
+    isPartOfSigners: false,
+    isOneVote: false,
+    hasCertificates: true,
+    isSameNetwork: false,
+    hasICCCredentials: false,
+    isInOutputPlutusData: false,
+  });
+  const resetValidationState = () => {
+    setValidationState((prev) => ({
+      ...prev,
+      isPartOfSigners: false,
+      isOneVote: false,
+      hasCertificates: true,
+      isSameNetwork: false,
+      hasICCCredentials: false,
+      isInOutputPlutusData: false,
+    }));
+  };
   const checkTransaction = async () => {
     if (!connected) {
-      setIsPartOfSigners(false);
-      setIsOneVote(false);
-      setHasCertificates(true);
-      setIsSameNetwork(false);
-      setHasICCCredentials(false);
-      setIsInOutputPlutusData(false);
+      resetValidationState();
       setvoteChoice("");
-      setVoteID("");
-      setMessage("Please connect your wallet first.");
-      return;
+      setgovActionID("");
+      return setMessage("Please connect your wallet first.");
     }
-    
-    const network = await wallet.getNetworkId();
-    console.log("Connected wallet network ID:", network);
-    console.log("isPartOfSigners:", isPartOfSigners);
-
-    const unsignedTransaction = decodeTransaction(unsignedTransactionHex);
-    setUnsignedTransaction(unsignedTransaction);
-
-    console.log("unsignedTransaction:", unsignedTransaction);
-
-    const changeAddress = await wallet.getChangeAddress();
-    const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
-
-    console.log("Stake Credential:", stakeCred);
-
-    //**************************************Transaction Validation Checks****************************************
-
-    const transactionBody = unsignedTransaction?.body();
-    const voting_procedures= transactionBody?.to_js_value().voting_procedures;
-  
     try{
-      if (!transactionBody) {
-        throw new Error("Transaction body is null.");
-      }
-      //wallet needs to sign
-      // Check if signer part of plutus output data
-      const requiredSigners = transactionBody.required_signers();
-      if (!requiredSigners || requiredSigners.len() === 0) {
-        console.log("No required signers in the transaction.");
+      const network = await wallet.getNetworkId();
+      const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
+      setUnsignedTransaction(unsignedTransaction);
+      if (!unsignedTransaction) throw new Error("Invalid transaction format.");
+
+      const changeAddress = await wallet.getChangeAddress();
+      const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
+
+      console.log("Connected wallet network ID:", network);
+      console.log("unsignedTransaction:", unsignedTransaction);
+      console.log("Stake Credential:", stakeCred);
+
+      //**************************************Transaction Validation Checks****************************************
+
+      const transactionBody = unsignedTransaction.body();
+      if (!transactionBody) throw new Error("Transaction body is null.");
+      const voting_procedures= transactionBody.to_js_value().voting_procedures;
+      if (!voting_procedures) throw new Error("Transaction has no voting procedures.");
+      const votes=voting_procedures[0].votes;
+      const hasOneVote = txValidationUtils.hasOneVoteOnTransaction(transactionBody);
+      const vote = voting_procedures[0].votes[0].voting_procedure.vote;
+
+      setValidationState({
+        isPartOfSigners: await txValidationUtils.isPartOfSigners(transactionBody, stakeCred),
+        isOneVote: hasOneVote,
+        hasCertificates: txValidationUtils.hasCertificates(transactionBody),
+        isSameNetwork: txValidationUtils.isSameNetwork(transactionBody, network),
+        hasICCCredentials: txValidationUtils.hasValidICCCredentials(transactionBody, network),
+        isInOutputPlutusData: txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred),
+      });
   
-      } else if (requiredSigners?.to_json().includes(stakeCred) ) {
-        console.log("Required signers in the transaction:", requiredSigners?.to_json());
-        setIsPartOfSigners(true);
-      } 
-
-      //one vote 
-      const votes=voting_procedures?.[0]?.votes;
-      const votesNumber = votes?.length;
-
-      if(votes && votesNumber === 1){
-        setIsOneVote(true);
-        setVoteID(convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index));
-        setmetadataAnchorURL(votes[0].voting_procedure.anchor?.anchor_url);
-        setMetadataAnchorHash(votes[0].voting_procedure.anchor?.anchor_data_hash);
-        console.log("Transaction has one vote set to:",voteChoice);
-
-        if (votes?.[0].voting_procedure.vote==='Yes'){
-          setvoteChoice('Constitutional');
-        }else if (votes?.[0].voting_procedure.vote==='No'){
-          setvoteChoice('Unconstitutional');
-        }else{
-          setvoteChoice('Abstain');
-        }
-      }else if (!votesNumber){
-        throw new Error("Transaction has no votes.");
-      }else{
-        //throw new Error("You are signing more than one vote. Number of votes: "+ votesNumber);
-      }
-      
-      // Check to see if the transactions has any certificates in it
-      const certificates = transactionBody?.certs();
-      console.log("certificates:", certificates);
-      if (!certificates) {
-        console.log("No certificates in the transaction.");
-        setHasCertificates(false);
-      }
-
-      //Same network
-      const transactionNetworkID= transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1")?0:1;
-      console.log('transactionNetwork:',transactionNetworkID);
-      if (network === transactionNetworkID ) {
-        setIsSameNetwork(true);
-      }
-      
-      
-      //Is Intersect CC credential
-      const voterJSON = voting_procedures?.[0]?.voter;
-      console.log("voterJSON:", voterJSON);
-      let script;
-      // Function to check if the voterJSON has ConstitutionalCommitteeHotCred to avoid type error
-      function isConstitutionalCommitteeHotCred(voter: CLS.VoterJSON): voter is { ConstitutionalCommitteeHotCred: { Script: string } } {
-        return (voter as { ConstitutionalCommitteeHotCred: any }).ConstitutionalCommitteeHotCred !== undefined;
-      }
-
-      if (voterJSON && isConstitutionalCommitteeHotCred(voterJSON)) {
-        // If it has ConstitutionalCommitteeHotCred, extract the Script hex
-        const credType = voterJSON.ConstitutionalCommitteeHotCred;
-        script = credType.Script;
-        console.log("ConstitutionalCommitteeHotCred Script:", script);
-        
-      }
-      //If in Testnet and scrit matches preview ICC credential ; else if in mainnet and script matches mainnet ICC credential
-      if (network === 0 && script === "4f00984fa72e265b8ff8ffce4405da562cd3d6b16a4a38de3372eeea") {
-        console.log("Intersect CC Credential found in testnet");
-        setHasICCCredentials(true);
-      } else if (network === 1 && script === "85c47dd4b9a2e70e88965d91dd69be182d5605b23bb5250b1c94bf64") {
-        console.log("Intersect CC Credential found in mainnet");
-        setHasICCCredentials(true);
-      } else {
-        console.error("Incorrect Intersect CC Credentials");
-      }
-      //check if signer is in plutus data
-      const plutusScripts = transactionBody?.outputs().to_js_value();
-      console.log("plutusScripts:", plutusScripts);
-      console.log("stakeCred:", stakeCred);
-      
-      if (Array.isArray(plutusScripts) && stakeCred) {
-
-        const regex = new RegExp(stakeCred);
-        
-        plutusScripts.forEach((output, index) => {
-          if (output.plutus_data && typeof output.plutus_data === 'object' && 'Data' in output.plutus_data) {
-            const plutusData = output.plutus_data.Data;
-            console.log("plutusData:", plutusData);
-
-            if (regex.test(plutusData)) {
-              console.log(`Stake credential found in output for address ${output.address}`);
-              setIsInOutputPlutusData(true);
-            }
-          } else if (!output.plutus_data) {
-            console.log(`No plutus data found in output`);
-          } else {
-            console.log(`Stake credential not found on plutus script data for address ${output.address}`);
-          }
-        });
-
-      } else {
-        console.error("Transaction outputs are not available ");
-      }
-      
-
-      //for future add context of some of the 
-
       //********************************************Voting Details *********************************************************************/
-      if (transactionNetworkID === 0) {
-        setCardanoscan("https://preprod.cardanoscan.io/govAction/");
-      } else if (transactionNetworkID === 1) {
-        setCardanoscan("https://cardanoscan.io/govAction/");
+      const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
+      
+      
+      if (votes && hasOneVote) {
+        
+        const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
+        setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
+        setgovActionID(govActionID);
+        if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
+        setmetadataAnchorURL(votes[0].voting_procedure.anchor.anchor_url);
+        setMetadataAnchorHash(votes[0].voting_procedure.anchor.anchor_data_hash);
+        setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
       }
 
       
@@ -219,13 +110,13 @@ export const TransactionButton = () => {
   };
  
   const signTransaction = async () => {
-    console.log("isPartOfSigners:", isPartOfSigners);
+    console.log("isPartOfSigners:", validationState.isPartOfSigners);
     try {
-      if (isPartOfSigners) {
+      if (validationState.isPartOfSigners) {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         console.log("Transaction signed successfully:", signedTx);
 
-        const signature = await decodeTransaction(signedTx);
+        const signature = await decodeHextoTx(signedTx);
         setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
         console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
         
@@ -266,14 +157,9 @@ export const TransactionButton = () => {
           value={unsignedTransactionHex}
           onChange={(e) => {
             setUnsignedTransactionHex(e.target.value);
-            setIsPartOfSigners(false);
-            setIsOneVote(false);
-            setHasCertificates(true);
-            setIsSameNetwork(false);
-            setHasICCCredentials(false);
-            setIsInOutputPlutusData(false);
+            resetValidationState();
             setvoteChoice("");
-            setVoteID("");
+            setgovActionID("");
           }}
         />
         <Button
@@ -289,73 +175,12 @@ export const TransactionButton = () => {
       {/* Transaction Details */}
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Transaction Details
+          Transaction Validation Checks
         </Typography>
 
         {unsignedTransaction && (
-          <Box display="flex" flexWrap="wrap" gap={2}>
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Wallet needs to sign?:{isPartOfSigners ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Signing one vote?:{isOneVote ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Has no certificates?:{hasCertificates ? "❌" : "✅"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Is the transaction in the same network?:
-              {isSameNetwork ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Has Intersect CC credentials?:{hasICCCredentials ? "✅" : "❌"}
-            </Typography>
-
-            <Typography
-              display="flex"
-              flexDirection="column"
-              width="45%"
-              variant="body1"
-              fontWeight="bold"
-            >
-              Is stake credential in plutus data?:
-              {isInOutputPlutusData ? "✅" : "❌"}
-            </Typography>
-          </Box>
+            <TransactionChecks {...validationState}
+          />
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
           Voting Details
@@ -369,8 +194,8 @@ export const TransactionButton = () => {
                     Governance Action ID{" "}
                   </TableCell>
                   <TableCell>
-                    <a href={`${cardanoscan}${voteID}`} target="_blank">
-                      {voteID}
+                    <a href={`${cardanoscan}`} target="_blank">
+                      {govActionID}
                     </a>
                   </TableCell>
                 </TableRow>
@@ -385,19 +210,12 @@ export const TransactionButton = () => {
                     Metadata Anchor URL
                   </TableCell>
                   <TableCell>
-                    <a
-                      href={
-                        metadataAnchorURL?.startsWith("https://") || metadataAnchorURL?.startsWith("http://")
-                        ? metadataAnchorURL
-                        : metadataAnchorURL?.startsWith("ipfs")
-                        ? "https://" + NEXT_PUBLIC_REST_IPFS_GATEWAY + metadataAnchorURL?.slice(7)
-                        : "https://" + metadataAnchorURL
-                      }
-                      target="_blank"
+                    <Link
+                      onClick={() => openInNewTab(metadataAnchorURL||"")}
                       style={{ color: "blue", textDecoration: "underline" }}
                     >
                       {metadataAnchorURL}
-                    </a>
+                    </Link>
                   </TableCell>
                 </TableRow>
                 <TableRow>
