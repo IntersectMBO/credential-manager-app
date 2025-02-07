@@ -39,7 +39,7 @@ export const Wallet = () => {
           const networkId = await wallet.getNetworkId();
 
           setPaymentCred(deserializeAddress(changeAddress).pubKeyHash);
-
+          //stake key used for vote signing 
           setStakeCred(deserializeAddress(changeAddress).stakeCredentialHash);
 
           setWalletNetwork(networkId === 0 ? "Testnet" : networkId === 1 ? "Mainnet" : "unknown");
@@ -75,11 +75,7 @@ export const Wallet = () => {
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Payment Credential</TableCell>
-                  <TableCell>{paymentCred || "Not Available"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Stake Credential</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Voter Key Hash</TableCell>
                   <TableCell>{stakeCred || "Not Available"}</TableCell>
                 </TableRow>
                 <TableRow>
