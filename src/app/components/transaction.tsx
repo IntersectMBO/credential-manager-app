@@ -2,19 +2,14 @@
 
 import { useState,useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
-import { BlockfrostProvider, deserializeAddress } from "@meshsdk/core";
+import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
-import dotevn from "dotenv";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech,getCardanoScanURL,openInNewTab } from "../utils/txUtils";
-
-dotevn.config();
-
-const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
-
+import { decodeHextoTx,convertGAToBech,getCardanoScanURL} from "../utils/txUtils";
+import { VotingDetails } from "./votingDetails";
 
 
 export const TransactionButton = () => {
@@ -23,11 +18,11 @@ export const TransactionButton = () => {
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setsignature] = useState<string>("");
-  const [voteChoice, setvoteChoice] = useState<string>();
-  const [govActionID, setgovActionID] = useState<string>();
-  const [cardanoscan, setCardanoscan] = useState<string>();
-  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>();
-  const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>();
+  const [voteChoice, setvoteChoice] = useState<string>("");
+  const [govActionID, setgovActionID] = useState<string>("");
+  const [cardanoscan, setCardanoscan] = useState<string>("");
+  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>("");
+  const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
     isOneVote: false,
@@ -186,47 +181,13 @@ export const TransactionButton = () => {
           Voting Details
         </Typography>
         {unsignedTransaction && (
-          <TableContainer sx={{ mb: 3 }}>
-            <Table sx={{ mt: 3 }}>
-              <TableBody>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Governance Action ID{" "}
-                  </TableCell>
-                  <TableCell>
-                    <a href={`${cardanoscan}`} target="_blank">
-                      {govActionID}
-                    </a>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Vote Choice{" "}
-                  </TableCell>
-                  <TableCell>{voteChoice}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Metadata Anchor URL
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      onClick={() => openInNewTab(metadataAnchorURL||"")}
-                      style={{ color: "blue", textDecoration: "underline" }}
-                    >
-                      {metadataAnchorURL}
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Metadata Anchor Hash
-                  </TableCell>
-                  <TableCell>{metadataAnchorHash}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <VotingDetails
+            govActionID={govActionID}
+            voteChoice={voteChoice}
+            cardanoscan={cardanoscan}
+            metadataAnchorURL={metadataAnchorURL}
+            metadataAnchorHash={metadataAnchorHash}
+          />
         )}
         <Box
           sx={{
@@ -291,6 +252,7 @@ export const TransactionButton = () => {
           {message}
         </Typography>
       )}
+     
     </Container>
   );
 };
