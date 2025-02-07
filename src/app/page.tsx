@@ -6,18 +6,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <Box
-      sx={{
-        backgroundImage: 'url(/background.png)',  
-        backgroundSize: 'cover',  
-        backgroundPosition: 'center',  
-        minHeight: '100vh',  
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        padding: 2,
-      }}
-    >
+    <Box className="background-container">
 
 
       <Container maxWidth="md" sx={{ display: "flex",  backgroundColor: "white", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", minHeight: "100vh" , padding: 2}}>
