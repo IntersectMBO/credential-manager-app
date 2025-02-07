@@ -41,8 +41,11 @@ export default function Home() {
         <Box display="flex" flexDirection="column" alignItems="center" width="100%">
           <Wallet />
           <TransactionButton />
+          
         </Box>
+        <Typography sx={{ alignSelf: "center-end", mt: "auto"}}>Version 1.1 - IntersectMBO</Typography>
       </Container>
+      
     </Box>
   );
 }
