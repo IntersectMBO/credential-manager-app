@@ -99,8 +99,8 @@ export const TransactionButton = () => {
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
         setgovActionID(govActionID);
         if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
-        setmetadataAnchorURL(votes[0].voting_procedure.anchor.anchor_url);
-        setMetadataAnchorHash(votes[0].voting_procedure.anchor.anchor_data_hash);
+        setmetadataAnchorURL(voteMetadataURL);
+        setMetadataAnchorHash(voteMetadataHash);
         setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
         }
 
