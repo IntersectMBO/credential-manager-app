@@ -5,12 +5,8 @@
 .background-container {
   background-image: url('/background.png');
   background-size: cover;
-  background-position: center;
-  width: 100vw; /* Set your desired width */
-  height: 100vh; /* Set your desired height */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  background-position: center top;
+  height: 100vh;
   padding: 2rem;
-  overflow: hidden;
+  overflow: auto; 
 }
