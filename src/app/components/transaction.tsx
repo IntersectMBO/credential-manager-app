@@ -1,6 +1,6 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
@@ -43,7 +43,7 @@ export const TransactionButton = () => {
     }));
   };
 
-  const resetAllStates = () => {
+  const resetAllStates = useCallback(() => {
     setMessage("");
     setUnsignedTransactionHex("");
     setUnsignedTransaction(null);
@@ -54,13 +54,13 @@ export const TransactionButton = () => {
     setmetadataAnchorURL("");
     setMetadataAnchorHash("");
     resetValidationState();
-  };
-
+  }, []);
+  
   useEffect(() => {
     if (!connected) {
       resetAllStates();
     }
-  }, [connected]);
+  }, [connected,resetAllStates]);
 
   const checkTransaction = async () => {
     if (!connected) {
