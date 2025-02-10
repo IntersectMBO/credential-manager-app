@@ -42,6 +42,26 @@ export const TransactionButton = () => {
       isInOutputPlutusData: false,
     }));
   };
+
+  const resetAllStates = () => {
+    setMessage("");
+    setUnsignedTransactionHex("");
+    setUnsignedTransaction(null);
+    setsignature("");
+    setvoteChoice("");
+    setgovActionID("");
+    setCardanoscan("");
+    setmetadataAnchorURL("");
+    setMetadataAnchorHash("");
+    resetValidationState();
+  };
+
+  useEffect(() => {
+    if (!connected) {
+      resetAllStates();
+    }
+  }, [connected]);
+
   const checkTransaction = async () => {
     if (!connected) {
       resetValidationState();
