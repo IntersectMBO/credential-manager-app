@@ -1,0 +1,74 @@
+name: Deploy Docker Image to EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Docker Buildx (needed for multi-platform builds)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 3: Build the Docker image from the Dockerfile in src folder
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} ./src
+
+      # Step 4: Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 5: Push the Docker image to Docker Hub
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
+
+      # Step 6: Set up AWS CLI to interact with EC2
+      - name: Set up AWS CLI
+        run: |
+          curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
+
+      # Step 7: Configure AWS CLI with credentials (set in GitHub Secrets)
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region us-east-1
+
+      # Step 8: SSH into EC2 instance and check for existing containers
+      - name: SSH into EC2 and update containers
+        run: |
+          ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> << 'EOF'
+            # Pull the latest Docker image from Docker Hub
+            docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
+
+            # List the existing containers running the previous version of the image
+            old_containers=$(docker ps -q --filter "ancestor=${{ secrets.DOCKER_USERNAME }}/council-toolkit")
+
+            # Stop and remove the old containers if they exist
+            if [ ! -z "$old_containers" ]; then
+              echo "Removing old containers..."
+              docker stop $old_containers
+              docker rm $old_containers
+            fi
+
+            # Run the new container with the updated image
+            echo "Starting new container with the latest image..."
+            docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
+          EOF
