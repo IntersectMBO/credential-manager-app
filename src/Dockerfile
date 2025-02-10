@@ -8,7 +8,6 @@ RUN npm install --silent
 COPY . .
 # Build the React app
 RUN npm run build
-RUN ls -al /app && ls -al /app/build || echo "Build directory missing!"
 
 
 FROM node:20.18
