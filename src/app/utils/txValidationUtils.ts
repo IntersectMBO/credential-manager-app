@@ -1,3 +1,5 @@
+import {getDataHashFromURI} from "../utils/txUtils";
+ 
 /**
  * Checks if the given stake credential is part of the required signers of the transaction.
  * @param transactionBody the body of the transaction to check.
@@ -156,3 +158,18 @@ export const isSignerInPlutusData = (transactionBody: any, stakeCredential: stri
     return false;
 };
 
+/**
+ * Checks if the given anchor URL produces the given anchor data hash.
+ * @param anchorURL The URL of the anchor to check.
+ * @param anchor_data_hash The expected anchor data hash.
+ * @returns {Promise<boolean>} True if the anchor URL produces the expected hash, false otherwise.
+ */
+export const checkMetadataAnchor = async (anchorURL: string, anchor_data_hash: string): Promise<boolean> => {
+  try {
+    const producedHash = await getDataHashFromURI(anchorURL);
+    return producedHash === anchor_data_hash;
+  } catch (error) {
+    console.error("Error fetching metadata:", error);
+    return false;
+  }
+};

@@ -8,7 +8,7 @@ import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech,getCardanoScanURL} from "../utils/txUtils";
+import { decodeHextoTx,convertGAToBech,getCardanoScanURL,getDataHashFromURI} from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
 
 
@@ -30,6 +30,7 @@ export const TransactionButton = () => {
     isSameNetwork: false,
     hasICCCredentials: false,
     isInOutputPlutusData: false,
+    isMetadataAnchorValid: false,
   });
   const resetValidationState = () => {
     setValidationState((prev) => ({
@@ -40,6 +41,7 @@ export const TransactionButton = () => {
       isSameNetwork: false,
       hasICCCredentials: false,
       isInOutputPlutusData: false,
+      isMetadataAnchorValid: false,
     }));
   };
   const checkTransaction = async () => {
@@ -69,8 +71,12 @@ export const TransactionButton = () => {
       const voting_procedures= transactionBody.to_js_value().voting_procedures;
       if (!voting_procedures) throw new Error("Transaction has no voting procedures.");
       const votes=voting_procedures[0].votes;
+      if (!votes) throw new Error("Transaction has no votes.");
       const hasOneVote = txValidationUtils.hasOneVoteOnTransaction(transactionBody);
       const vote = voting_procedures[0].votes[0].voting_procedure.vote;
+      if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
+      const voteMetadataURL = votes[0].voting_procedure.anchor.anchor_url;
+      const voteMetadataHash = votes[0].voting_procedure.anchor.anchor_data_hash;
 
       setValidationState({
         isPartOfSigners: await txValidationUtils.isPartOfSigners(transactionBody, stakeCred),
@@ -79,6 +85,7 @@ export const TransactionButton = () => {
         isSameNetwork: txValidationUtils.isSameNetwork(transactionBody, network),
         hasICCCredentials: txValidationUtils.hasValidICCCredentials(transactionBody, network),
         isInOutputPlutusData: txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred),
+        isMetadataAnchorValid: await txValidationUtils.checkMetadataAnchor(voteMetadataURL,voteMetadataHash),
       });
   
       //********************************************Voting Details *********************************************************************/
@@ -88,13 +95,15 @@ export const TransactionButton = () => {
       if (votes && hasOneVote) {
         
         const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
+
         setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
         setgovActionID(govActionID);
         if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
         setmetadataAnchorURL(votes[0].voting_procedure.anchor.anchor_url);
         setMetadataAnchorHash(votes[0].voting_procedure.anchor.anchor_data_hash);
         setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
-      }
+        }
+
 
       
     }

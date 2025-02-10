@@ -7,6 +7,7 @@ interface TransactionChecksProps {
   isSameNetwork: boolean;
   hasICCCredentials: boolean;
   isInOutputPlutusData: boolean;
+  isMetadataAnchorValid: boolean;
 }
 
 export const TransactionChecks = ({
@@ -16,6 +17,7 @@ export const TransactionChecks = ({
   isSameNetwork,
   hasICCCredentials,
   isInOutputPlutusData,
+  isMetadataAnchorValid,
 }: TransactionChecksProps) => {
   return (
 
@@ -42,6 +44,10 @@ export const TransactionChecks = ({
 
         <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
           Is stake credential in plutus data?: {isInOutputPlutusData ? "✅" : "❌"}
+        </Typography>
+
+        <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
+          Does the metadata match the provided hash? ?: {isMetadataAnchorValid ? "✅" : "❌"}
         </Typography>
       </Box>
   
