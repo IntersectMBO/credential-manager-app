@@ -32,7 +32,7 @@ export default function Home() {
           <TransactionButton />
           
         </Box>
-        <Typography sx={{ alignSelf: "center-end", mt: "auto"}}>Version 1.1 - IntersectMBO</Typography>
+        <Typography sx={{ alignSelf: "center-end", mt: "auto"}}>Version 1.2 - IntersectMBO</Typography>
       </Container>
       
     </Box>
