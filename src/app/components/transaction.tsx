@@ -17,11 +17,11 @@ export const TransactionButton = () => {
   const [unsignedTransactionHex, setUnsignedTransactionHex] = useState("");
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
-  const [signature, setsignature] = useState<string>("");
-  const [voteChoice, setvoteChoice] = useState<string>("");
-  const [govActionID, setgovActionID] = useState<string>("");
+  const [signature, setSignature] = useState<string>("");
+  const [voteChoice, setVoteChoice] = useState<string>("");
+  const [govActionID, setGovActionID] = useState<string>("");
   const [cardanoscan, setCardanoscan] = useState<string>("");
-  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>("");
+  const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
@@ -49,11 +49,11 @@ export const TransactionButton = () => {
     setMessage("");
     setUnsignedTransactionHex("");
     setUnsignedTransaction(null);
-    setsignature("");
-    setvoteChoice("");
-    setgovActionID("");
+    setSignature("");
+    setVoteChoice("");
+    setGovActionID("");
     setCardanoscan("");
-    setmetadataAnchorURL("");
+    setMetadataAnchorURL("");
     setMetadataAnchorHash("");
     resetValidationState();
   }, []);
@@ -67,8 +67,8 @@ export const TransactionButton = () => {
   const checkTransaction = async () => {
     if (!connected) {
       resetValidationState();
-      setvoteChoice("");
-      setgovActionID("");
+      setVoteChoice("");
+      setGovActionID("");
       return setMessage("Please connect your wallet first.");
     }
     try{
@@ -116,10 +116,10 @@ export const TransactionButton = () => {
         
         const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
 
-        setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
-        setgovActionID(govActionID);
+        setVoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
+        setGovActionID(govActionID);
         if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
-        setmetadataAnchorURL(voteMetadataURL);
+        setMetadataAnchorURL(voteMetadataURL);
         setMetadataAnchorHash(voteMetadataHash);
         setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
         }
@@ -143,7 +143,7 @@ export const TransactionButton = () => {
         const signedTransactionObj = decodeHextoTx(signedTx);
         const witnessHex = signedTransactionObj?.witness_set().vkeys()?.get(0)?.to_hex() || '';
 
-        setsignature(witnessHex || '');
+        setSignature(witnessHex || '');
         console.log("Witness (hex): ", witnessHex);
       }
       else { 
@@ -185,8 +185,8 @@ export const TransactionButton = () => {
           onChange={(e) => {
             setUnsignedTransactionHex(e.target.value);
             resetValidationState();
-            setvoteChoice("");
-            setgovActionID("");
+            setVoteChoice("");
+            setGovActionID("");
           }}
         />
         <Button
