@@ -47,7 +47,7 @@ export const TransactionChecks = ({
         </Typography>
 
         <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-          Does the metadata match the provided hash? ?: {isMetadataAnchorValid ? "✅" : "❌"}
+          Does the metadata match the provided hash ?: {isMetadataAnchorValid ? "✅" : "❌"}
         </Typography>
       </Box>
   
