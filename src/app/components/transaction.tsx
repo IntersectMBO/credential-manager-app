@@ -138,14 +138,17 @@ export const TransactionButton = () => {
     try {
       if (validationState.isPartOfSigners) {
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
-        console.log("Transaction signed successfully:", signedTx);
-
-        const signature = await decodeHextoTx(signedTx);
-        setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
-        console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
+        console.log("Transaction signed successfully");
         
+        const signedTransactionObj = decodeHextoTx(signedTx);
+        const witnessHex = signedTransactionObj?.witness_set().vkeys()?.get(0)?.to_hex() || '';
+
+        setsignature(witnessHex || '');
+        console.log("Witness (hex): ", witnessHex);
       }
-      else { throw new Error("You are not part of the required signers."); }
+      else { 
+        throw new Error("You are not part of the required signers.");
+      }
 
     } catch (error) {
       console.error("Error signing transaction:", error);
