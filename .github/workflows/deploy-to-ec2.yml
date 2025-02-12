@@ -69,5 +69,5 @@ jobs:
 
             # Run the new container with the updated image
             echo "Starting new container with the latest image..."
-            docker run -d --name myapp -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
+            docker run -d --name council-toolkit -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} npm run start
           EOF
