@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-ec2:
     runs-on: ubuntu-latest
 
     permissions:
@@ -36,27 +36,24 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
 
-      # Step 6: Set up AWS CLI to interact with EC2
-      - name: Set up AWS CLI
-        run: |
-          curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-          aws --version
-
-      # Step 7: Configure AWS CLI with credentials (set in GitHub Secrets)
       - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+        
+      - name: Setup SSH Key
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region us-east-1
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ec2_key.pem
+          chmod 600 ec2_key.pem
 
       # Step 8: SSH into EC2 instance and check for existing containers
       - name: SSH into EC2 and update containers
         run: |
-          ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> << 'EOF'
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no ec2-user@ec2-51-44-65-72.eu-west-3.compute.amazonaws.com << 'EOF'
             # Pull the latest Docker image from Docker Hub
-            docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
 
             # List the existing containers running the previous version of the image
             old_containers=$(docker ps -q --filter "ancestor=${{ secrets.DOCKER_USERNAME }}/council-toolkit")
@@ -70,5 +67,5 @@ jobs:
 
             # Run the new container with the updated image
             echo "Starting new container with the latest image..."
-            docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
+            docker run -d --name myapp -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
           EOF
