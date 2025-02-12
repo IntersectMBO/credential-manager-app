@@ -1,7 +1,9 @@
-name: Deploy Docker Image to EC2
+name: Deploy Image to EC2
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feature/deploy-to-ec2
 
 jobs:
   build-and-deploy-ec2:
