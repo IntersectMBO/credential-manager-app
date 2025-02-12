@@ -1,9 +1,7 @@
 name: Deploy Image to EC2
 
 on:
-  push:
-    branches:
-      - feature/deploy-to-ec2
+  workflow_dispatch:
 
 jobs:
   build-and-deploy-ec2:
@@ -58,7 +56,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
 
             # List the existing containers running the previous version of the image
-            old_containers=$(docker ps -q --filter "ancestor=${{ secrets.DOCKER_USERNAME }}/council-toolkit")
+            old_containers=$(docker ps -q --filter "name=council-toolkit")
 
             # Stop and remove the old containers if they exist
             if [ ! -z "$old_containers" ]; then
