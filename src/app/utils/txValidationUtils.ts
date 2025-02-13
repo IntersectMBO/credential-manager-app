@@ -1,5 +1,6 @@
 import {getDataHashFromURI} from "../utils/txUtils";
- 
+import * as CSL from "@emurgo/cardano-serialization-lib-browser";
+
 /**
  * Checks if the given stake credential is part of the required signers of the transaction.
  * @param transactionBody the body of the transaction to check.
@@ -173,3 +174,18 @@ export const checkMetadataAnchor = async (anchorURL: string, anchor_data_hash: s
     return false;
   }
 };
+
+/**
+ * Checks if a transaction is signed by looking for witnesses in the transaction.
+ * @param transaction The transaction to check.
+ * @returns {boolean} True if the transaction is signed, false otherwise.
+ */
+export const isSignedTransaction = (transaction: CSL.Transaction): boolean => {
+  
+  const witnesses = transaction.witness_set().vkeys();
+  if (!witnesses || witnesses.len() === 0) {
+    return false;
+  }
+  return true;
+}
+
