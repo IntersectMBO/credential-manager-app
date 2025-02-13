@@ -3,25 +3,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
-import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
+import { Button, TextField, Box, Typography, Container } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech,getCardanoScanURL,getDataHashFromURI} from "../utils/txUtils";
+import { decodeHextoTx,convertGAToBech, getCardanoScanURL } from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
-
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
   const [unsignedTransactionHex, setUnsignedTransactionHex] = useState("");
   const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
-  const [signature, setsignature] = useState<string>("");
-  const [voteChoice, setvoteChoice] = useState<string>("");
-  const [govActionID, setgovActionID] = useState<string>("");
+  const [signature, setSignature] = useState<string>("");
+  const [voteChoice, setVoteChoice] = useState<string>("");
+  const [govActionID, setGovActionID] = useState<string>("");
   const [cardanoscan, setCardanoscan] = useState<string>("");
-  const [metadataAnchorURL, setmetadataAnchorURL] = useState<string>("");
+  const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
@@ -49,11 +48,11 @@ export const TransactionButton = () => {
     setMessage("");
     setUnsignedTransactionHex("");
     setUnsignedTransaction(null);
-    setsignature("");
-    setvoteChoice("");
-    setgovActionID("");
+    setSignature("");
+    setVoteChoice("");
+    setGovActionID("");
     setCardanoscan("");
-    setmetadataAnchorURL("");
+    setMetadataAnchorURL("");
     setMetadataAnchorHash("");
     resetValidationState();
   }, []);
@@ -67,8 +66,8 @@ export const TransactionButton = () => {
   const checkTransaction = async () => {
     if (!connected) {
       resetValidationState();
-      setvoteChoice("");
-      setgovActionID("");
+      setVoteChoice("");
+      setGovActionID("");
       return setMessage("Please connect your wallet first.");
     }
     try{
@@ -110,42 +109,62 @@ export const TransactionButton = () => {
   
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
-      
-      
       if (votes && hasOneVote) {
         
         const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
 
-        setvoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
-        setgovActionID(govActionID);
+        setVoteChoice(vote === 'Yes' ? 'Constitutional' : vote === 'No' ? 'Unconstitutional' : 'Abstain');
+        setGovActionID(govActionID);
         if(!votes[0].voting_procedure.anchor) throw new Error("Vote has no anchor.");
-        setmetadataAnchorURL(voteMetadataURL);
+        setMetadataAnchorURL(voteMetadataURL);
         setMetadataAnchorHash(voteMetadataHash);
         setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
         }
-
-
-      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
     }
-   
   };
  
   const signTransaction = async () => {
-    console.log("isPartOfSigners:", validationState.isPartOfSigners);
     try {
       if (validationState.isPartOfSigners) {
+        // Pass transaction to wallet for signing
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
-        console.log("Transaction signed successfully:", signedTx);
+        const signedTransactionObj = decodeHextoTx(signedTx);
 
-        const signature = await decodeHextoTx(signedTx);
-        setsignature(signature?.witness_set().vkeys()?.get(0)?.signature()?.to_hex() || '');
-        console.log("signature:", signature?.witness_set().vkeys()?.get(0).signature().to_hex());
-        
+        const witnessHex = signedTransactionObj?.witness_set().vkeys()?.get(0)?.to_hex() || '';
+        const signature = signedTransactionObj?.witness_set().vkeys()?.get(0).signature().to_hex() || '';
+        let providedVkey = signedTransactionObj?.witness_set().vkeys()?.get(0).vkey().to_hex() || '';
+
+        // Remove the (confusing) CBOR header, not sure why adds this
+        providedVkey = providedVkey.substring(4);
+        const providedVKeyObj = CLS.PublicKey.from_hex(providedVkey);
+
+        // Check to make sure the wallet produced a signature as expected
+
+        // compare the desired credential with the vKey returned from wallet
+        const expectedVKeyHash = deserializeAddress(await wallet.getChangeAddress()).stakeCredentialHash;
+        const providedVKeyHash = providedVKeyObj.hash().to_hex();
+
+        if (providedVKeyHash != expectedVKeyHash) {
+          throw new Error("Wallet returned unexpected VKey.");
+        }
+
+        // Check the produced signature if valid
+        const txHash = CLS.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
+        const validSignature = providedVKeyObj.verify(txHash, CLS.Ed25519Signature.from_hex(signature));
+
+        if (!validSignature){
+          throw new Error("Wallet created an invalid signature.");
+        }
+
+        setSignature(witnessHex);
+        console.log("Witness (hex): ", witnessHex);
       }
-      else { throw new Error("You are not part of the required signers."); }
+      else { 
+        throw new Error("You are not part of the required signers.");
+      }
 
     } catch (error) {
       console.error("Error signing transaction:", error);
@@ -182,8 +201,8 @@ export const TransactionButton = () => {
           onChange={(e) => {
             setUnsignedTransactionHex(e.target.value);
             resetValidationState();
-            setvoteChoice("");
-            setgovActionID("");
+            setVoteChoice("");
+            setGovActionID("");
           }}
         />
         <Button
