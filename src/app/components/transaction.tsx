@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@meshsdk/react";
-import { deserializeAddress } from "@meshsdk/core";
+import { deserializeAddress, checkSignature } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
@@ -10,7 +10,6 @@ import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
 import { decodeHextoTx,convertGAToBech,getCardanoScanURL,getDataHashFromURI} from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
-
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
@@ -134,14 +133,37 @@ export const TransactionButton = () => {
   };
  
   const signTransaction = async () => {
-    console.log("isPartOfSigners:", validationState.isPartOfSigners);
     try {
       if (validationState.isPartOfSigners) {
+        // Pass transaction to wallet for signing
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
-        console.log("Transaction signed successfully");
-        
         const signedTransactionObj = decodeHextoTx(signedTx);
+
         const witnessHex = signedTransactionObj?.witness_set().vkeys()?.get(0)?.to_hex() || '';
+        const signature = signedTransactionObj?.witness_set().vkeys()?.get(0).signature().to_hex() || '';
+        let providedVkey = signedTransactionObj?.witness_set().vkeys()?.get(0).vkey().to_hex() || '';
+
+        // Remove the (confusing) CBOR header, not sure why mesh adds this
+        providedVkey = providedVkey.substring(4);
+        const providedVKeyObj = CLS.PublicKey.from_hex(providedVkey);
+
+        // Check to make sure the wallet produced a signature as expected
+
+        // compare the desired credential with the vKey returned from wallet
+        const expectedVKeyHash = deserializeAddress(await wallet.getChangeAddress()).stakeCredentialHash;
+        const providedVKeyHash = providedVKeyObj.hash().to_hex();
+
+        if (providedVKeyHash != expectedVKeyHash) {
+          throw new Error("Wallet returned unexpected VKey.");
+        }
+
+        // Check the produced signature if valid
+        const txHash = CLS.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
+        const validSignature = providedVKeyObj.verify(txHash, CLS.Ed25519Signature.from_hex(signature));
+
+        if (!validSignature){
+          throw new Error("Wallet created an invalid signature.");
+        }
 
         setSignature(witnessHex || '');
         console.log("Witness (hex): ", witnessHex);
