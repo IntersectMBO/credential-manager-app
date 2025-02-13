@@ -109,8 +109,6 @@ export const TransactionButton = () => {
   
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
-      
-      
       if (votes && hasOneVote) {
         
         const govActionID = convertGAToBech(votes[0].action_id.transaction_id, votes[0].action_id.index);
@@ -122,14 +120,10 @@ export const TransactionButton = () => {
         setMetadataAnchorHash(voteMetadataHash);
         setCardanoscan(getCardanoScanURL(govActionID,transactionNetworkID));
         }
-
-
-      
     }
     catch (error) {
       console.error("Error validating transaction:", error);
     }
-   
   };
  
   const signTransaction = async () => {
@@ -143,7 +137,7 @@ export const TransactionButton = () => {
         const signature = signedTransactionObj?.witness_set().vkeys()?.get(0).signature().to_hex() || '';
         let providedVkey = signedTransactionObj?.witness_set().vkeys()?.get(0).vkey().to_hex() || '';
 
-        // Remove the (confusing) CBOR header, not sure why mesh adds this
+        // Remove the (confusing) CBOR header, not sure why adds this
         providedVkey = providedVkey.substring(4);
         const providedVKeyObj = CLS.PublicKey.from_hex(providedVkey);
 
