@@ -159,7 +159,7 @@ export const TransactionButton = () => {
           throw new Error("Wallet created an invalid signature.");
         }
 
-        setSignature(witnessHex || '');
+        setSignature(witnessHex);
         console.log("Witness (hex): ", witnessHex);
       }
       else { 
