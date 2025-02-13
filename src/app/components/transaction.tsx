@@ -203,6 +203,9 @@ export const TransactionButton = () => {
             resetValidationState();
             setVoteChoice("");
             setGovActionID("");
+            setSignature("");
+            setMetadataAnchorURL("");
+            setMetadataAnchorHash("");
           }}
         />
         <Button
