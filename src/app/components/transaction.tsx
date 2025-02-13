@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container } from "@mui/material";
-import * as CLS from "@emurgo/cardano-serialization-lib-browser";
+import * as CSL from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
@@ -14,7 +14,7 @@ import { VotingDetails } from "./votingDetails";
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
   const [unsignedTransactionHex, setUnsignedTransactionHex] = useState("");
-  const [unsignedTransaction, setUnsignedTransaction] = useState<CLS.Transaction | null>(null);
+  const [unsignedTransaction, setUnsignedTransaction] = useState<CSL.Transaction | null>(null);
   const { wallet, connected, name, connect, disconnect } = useWallet();
   const [signature, setSignature] = useState<string>("");
   const [voteChoice, setVoteChoice] = useState<string>("");
@@ -139,7 +139,7 @@ export const TransactionButton = () => {
 
         // Remove the (confusing) CBOR header, not sure why adds this
         providedVkey = providedVkey.substring(4);
-        const providedVKeyObj = CLS.PublicKey.from_hex(providedVkey);
+        const providedVKeyObj = CSL.PublicKey.from_hex(providedVkey);
 
         // Check to make sure the wallet produced a signature as expected
 
@@ -152,8 +152,8 @@ export const TransactionButton = () => {
         }
 
         // Check the produced signature if valid
-        const txHash = CLS.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
-        const validSignature = providedVKeyObj.verify(txHash, CLS.Ed25519Signature.from_hex(signature));
+        const txHash = CSL.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
+        const validSignature = providedVKeyObj.verify(txHash, CSL.Ed25519Signature.from_hex(signature));
 
         if (!validSignature){
           throw new Error("Wallet created an invalid signature.");
