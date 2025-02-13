@@ -178,14 +178,14 @@ export const checkMetadataAnchor = async (anchorURL: string, anchor_data_hash: s
 /**
  * Checks if a transaction is signed by looking for witnesses in the transaction.
  * @param transaction The transaction to check.
- * @returns {boolean} True if the transaction is signed, false otherwise.
+ * @returns {boolean} True if the transaction is unsigned, false otherwise.
  */
-export const isSignedTransaction = (transaction: CSL.Transaction): boolean => {
+export const isUnsignedTransaction = (transaction: CSL.Transaction): boolean => {
   
   const witnesses = transaction.witness_set().vkeys();
   if (!witnesses || witnesses.len() === 0) {
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 

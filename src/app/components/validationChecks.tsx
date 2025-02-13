@@ -8,7 +8,7 @@ interface TransactionChecksProps {
   hasICCCredentials: boolean;
   isInOutputPlutusData: boolean;
   isMetadataAnchorValid: boolean;
-  isSignedTransaction: boolean;
+  isUnsignedTransaction: boolean;
 }
 
 export const TransactionChecks = ({
@@ -19,7 +19,7 @@ export const TransactionChecks = ({
   hasICCCredentials,
   isInOutputPlutusData,
   isMetadataAnchorValid,
-  isSignedTransaction,
+  isUnsignedTransaction,
 }: TransactionChecksProps) => {
   return (
 
@@ -29,7 +29,7 @@ export const TransactionChecks = ({
         </Typography>
 
         <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
-          Transaction is unsigned?: {isSignedTransaction ? "❌":"✅"}
+          Transaction is unsigned?: {isUnsignedTransaction ? "✅" : "❌"}
         </Typography>
 
         <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
