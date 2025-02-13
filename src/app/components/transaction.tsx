@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@meshsdk/react";
-import { deserializeAddress, checkSignature } from "@meshsdk/core";
-import { Button, TextField, Box, Typography, Container, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link } from "@mui/material";
+import { deserializeAddress } from "@meshsdk/core";
+import { Button, TextField, Box, Typography, Container } from "@mui/material";
 import * as CLS from "@emurgo/cardano-serialization-lib-browser";
 import ReactJsonPretty from 'react-json-pretty';
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech,getCardanoScanURL,getDataHashFromURI} from "../utils/txUtils";
+import { decodeHextoTx,convertGAToBech, getCardanoScanURL } from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
 
 export const TransactionButton = () => {
