@@ -24,7 +24,7 @@ export default function Home() {
       
         </Box>
         <Typography variant="h4" component="h1" fontWeight="bold" textTransform="uppercase" mb={3} textAlign="center" paddingTop={2}>
-          Intersect Council Toolkit
+          Council Toolkit
         </Typography>
 
         <Box display="flex" flexDirection="column" alignItems="center" width="100%">
