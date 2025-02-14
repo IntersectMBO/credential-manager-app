@@ -72,7 +72,7 @@ export const TransactionChecks = ({
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about certificates" />
+          <InfoWithTooltip info="Does the transaction contain any unexpected certificates?" />
           <Typography variant="body1" fontWeight="bold">
             Has no certificates?: {hasCertificates ? "❌" : "✅"}
           </Typography>
