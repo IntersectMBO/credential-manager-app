@@ -42,7 +42,7 @@ export const TransactionChecks = ({
         </Box>
         
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about network" />
+          <InfoWithTooltip info="Is your wallet connected to the same network that the transaction is for?" />
           <Typography variant="body1" fontWeight="bold">
             Is the transaction in the same network?: {isSameNetwork ? "✅" : "❌"}
           </Typography>
