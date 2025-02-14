@@ -51,7 +51,7 @@ export const TransactionChecks = ({
         <Box display="flex" alignItems="center" gap={0.5}>
           <InfoWithTooltip info="Does the transaction reference Intersect's ICC credential?" />
           <Typography variant="body1" fontWeight="bold">
-            Has Intersect CC credentials?: {hasICCCredentials ? "✅" : "❌"}
+            Is Intersect ICC credential?: {hasICCCredentials ? "✅" : "❌"}
           </Typography>
         </Box>
 
