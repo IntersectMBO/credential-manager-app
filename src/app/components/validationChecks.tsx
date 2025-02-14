@@ -28,7 +28,7 @@ export const TransactionChecks = ({
 
       <Box display="flex" flexDirection="column" gap={2} width="48%">
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about wallet signing" />
+          <InfoWithTooltip info="Should you be signing this transactions?" />
           <Typography variant="body1" fontWeight="bold">
             Wallet needs to sign?: {isPartOfSigners ? "✅" : "❌"}
           </Typography>
