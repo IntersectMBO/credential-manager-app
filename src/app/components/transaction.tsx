@@ -30,6 +30,7 @@ export const TransactionButton = () => {
     hasICCCredentials: false,
     isInOutputPlutusData: false,
     isMetadataAnchorValid: false,
+    isUnsignedTransaction: false,
   });
   const resetValidationState = () => {
     setValidationState((prev) => ({
@@ -41,6 +42,7 @@ export const TransactionButton = () => {
       hasICCCredentials: false,
       isInOutputPlutusData: false,
       isMetadataAnchorValid: false,
+      isUnsignedTransaction: false,
     }));
   };
 
@@ -105,6 +107,7 @@ export const TransactionButton = () => {
         hasICCCredentials: txValidationUtils.hasValidICCCredentials(transactionBody, network),
         isInOutputPlutusData: txValidationUtils.isSignerInPlutusData(transactionBody, stakeCred),
         isMetadataAnchorValid: await txValidationUtils.checkMetadataAnchor(voteMetadataURL,voteMetadataHash),
+        isUnsignedTransaction: txValidationUtils.isUnsignedTransaction(unsignedTransaction),
       });
   
       //********************************************Voting Details *********************************************************************/
