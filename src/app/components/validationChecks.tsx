@@ -79,7 +79,7 @@ export const TransactionChecks = ({
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about plutus data" />
+          <InfoWithTooltip info="Is your key within the Intersect ICC hierarchy" />
           <Typography variant="body1" fontWeight="bold">
             Is stake credential in plutus data?: {isInOutputPlutusData ? "✅" : "❌"}
           </Typography>
