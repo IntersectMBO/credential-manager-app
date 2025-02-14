@@ -1,19 +1,20 @@
-import * as CLS from "@emurgo/cardano-serialization-lib-browser";
+import * as CSL from "@emurgo/cardano-serialization-lib-browser";
 import { deserializeAddress } from "@meshsdk/core";
 import dotevn from "dotenv";
+import * as blake from 'blakejs';
 dotevn.config();
 const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
 
 /**
  * Decodes a transaction from a hex string to a CardanoSerializationLib Transaction object.
  * @param unsignedTransactionHex hex string of the unsigned transaction.
- * @returns {CLS.Transaction} the decoded transaction object, or null if the decoding fails.
+ * @returns {CSL.Transaction} the decoded transaction object, or null if the decoding fails.
  */
 
 export const decodeHextoTx = (unsignedTransactionHex: string) => {
     console.log("decodeHextoTx");
     try {
-      const unsignedTransaction = CLS.Transaction.from_hex(unsignedTransactionHex);
+      const unsignedTransaction = CSL.Transaction.from_hex(unsignedTransactionHex);
       return unsignedTransaction;
     } catch (error) {
       console.error("Error decoding transaction:", error);
@@ -63,3 +64,22 @@ export const openInNewTab = (url: string) => {
       : "https://" + url;
   window.open(fullUrl, "_blank", "noopener,noreferrer");
 };
+ 
+export const getDataHashFromURI = async (anchorURL: string) => {
+  console.log('Callllll fuuunctioooon');
+  if (anchorURL !== "") {
+    console.log("Anchor data null")
+  }
+  if (anchorURL.startsWith("ipfs")) {
+    anchorURL = "https://" + NEXT_PUBLIC_REST_IPFS_GATEWAY + anchorURL.slice(7);
+  }
+  // anchorURL='https://ipfs.io/ipfs/bafkreidsmyjjfrsvj3czrsu5roy2undco2bhhcnqdgbievolgbyi7lptxy'
+  const data = await fetch(anchorURL);
+  const text = await data.text();
+  console.log('THEEEEE TEXT',text);
+  const hash = blake.blake2bHex(text,undefined, 32);
+  console.log("Hash from text:", hash);
+  return hash
+}
+
+

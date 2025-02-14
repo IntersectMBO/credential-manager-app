@@ -3,12 +3,10 @@
 @tailwind utilities;
 
 .background-container {
-    background-image: url('/background.png');
-    background-size: cover;
-    background-position: center;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 2rem;
-  }
+  background-image: url('/background.png');
+  background-size: cover;
+  background-position: center top;
+  height: 100vh;
+  padding: 2rem;
+  overflow: auto; 
+}

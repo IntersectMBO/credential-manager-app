@@ -1,3 +1,6 @@
+import {getDataHashFromURI} from "../utils/txUtils";
+import * as CSL from "@emurgo/cardano-serialization-lib-browser";
+
 /**
  * Checks if the given stake credential is part of the required signers of the transaction.
  * @param transactionBody the body of the transaction to check.
@@ -155,4 +158,34 @@ export const isSignerInPlutusData = (transactionBody: any, stakeCredential: stri
 
     return false;
 };
+
+/**
+ * Checks if the given anchor URL produces the given anchor data hash.
+ * @param anchorURL The URL of the anchor to check.
+ * @param anchor_data_hash The expected anchor data hash.
+ * @returns {Promise<boolean>} True if the anchor URL produces the expected hash, false otherwise.
+ */
+export const checkMetadataAnchor = async (anchorURL: string, anchor_data_hash: string): Promise<boolean> => {
+  try {
+    const producedHash = await getDataHashFromURI(anchorURL);
+    return producedHash === anchor_data_hash;
+  } catch (error) {
+    console.error("Error fetching metadata:", error);
+    return false;
+  }
+};
+
+/**
+ * Checks if a transaction is signed by looking for witnesses in the transaction.
+ * @param transaction The transaction to check.
+ * @returns {boolean} True if the transaction is unsigned, false otherwise.
+ */
+export const isUnsignedTransaction = (transaction: CSL.Transaction): boolean => {
+  
+  const witnesses = transaction.witness_set().vkeys();
+  if (!witnesses || witnesses.len() === 0) {
+    return true;
+  }
+  return false;
+}
 
