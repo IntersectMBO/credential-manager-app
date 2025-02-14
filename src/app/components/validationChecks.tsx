@@ -65,7 +65,7 @@ export const TransactionChecks = ({
 
       <Box display="flex" flexDirection="column" gap={2} width="48%">
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about one vote" />
+          <InfoWithTooltip info="Does the transaction only contain one vote? multiple votes could be misleading" />
           <Typography variant="body1" fontWeight="bold">
             Signing one vote?: {isOneVote ? "✅" : "❌"}
           </Typography>
