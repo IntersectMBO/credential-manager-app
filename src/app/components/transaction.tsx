@@ -126,6 +126,7 @@ export const TransactionButton = () => {
     }
     catch (error) {
       console.error("Error validating transaction:", error);
+      setMessage("Transaction validation failed. " + error);
     }
   };
  
