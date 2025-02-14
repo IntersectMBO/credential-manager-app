@@ -56,7 +56,7 @@ export const TransactionChecks = ({
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Explanation about metadata hash" />
+          <InfoWithTooltip info="Does the document hosted at the provided metadata URL match the provided hash?" />
           <Typography variant="body1" fontWeight="bold">
             Does the metadata match the provided hash?: {isMetadataAnchorValid ? "✅" : "❌"}
           </Typography>
