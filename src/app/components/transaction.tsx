@@ -138,7 +138,7 @@ export const TransactionButton = () => {
  
   const signTransaction = async () => {
     try {
-      if (validationState.isPartOfSigners) {
+      if (true) {
         // Pass transaction to wallet for signing
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         const signedTransactionObj = decodeHextoTx(signedTx);
