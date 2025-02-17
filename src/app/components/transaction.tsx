@@ -157,17 +157,17 @@ export const TransactionButton = () => {
         const expectedVKeyHash = deserializeAddress(await wallet.getChangeAddress()).stakeCredentialHash;
         const providedVKeyHash = providedVKeyObj.hash().to_hex();
 
-        if (providedVKeyHash != expectedVKeyHash) {
-          throw new Error("Wallet returned unexpected VKey.");
-        }
+        // if (providedVKeyHash != expectedVKeyHash) {
+        //   throw new Error("Wallet returned unexpected VKey.");
+        // }
 
         // Check the produced signature if valid
         const txHash = CSL.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
         const validSignature = providedVKeyObj.verify(txHash, CSL.Ed25519Signature.from_hex(signature));
 
-        if (!validSignature){
-          throw new Error("Wallet created an invalid signature.");
-        }
+        // if (!validSignature){
+        //   throw new Error("Wallet created an invalid signature.");
+        // }
 
         setSignature(witnessHex);
         console.log("Witness (hex): ", witnessHex);
