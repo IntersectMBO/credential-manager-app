@@ -16,11 +16,12 @@ const downloadFile = (data : any, filename : string , fileExtension = "json") =>
     URL.revokeObjectURL(data);
 };
 
-const downloadSigniture = (govActionID : string, signature : string) => {   
+const downloadSignature = (govActionID : string, voterKeyHash : string , signature : string) => {   
     const data = {
         type: "Unwitnessed Tx ConwayEra",
         description: "Ledger Cddl Format",
         govActionID,
+        voterKeyHash,
         cborHex: signature
     };
     downloadFile(data, "vote", "signature");
@@ -28,13 +29,14 @@ const downloadSigniture = (govActionID : string, signature : string) => {
 
 interface DownloadButtonProps {
     govActionID: string;
+    voterKeyHash: string;
     signature: string;
   }
 
-export default function DownloadButton({ govActionID, signature }: DownloadButtonProps) {
+export default function DownloadButton({ govActionID, voterKeyHash, signature }: DownloadButtonProps) {
     return <Button variant="contained"
     color="success"
     sx={{ whiteSpace: "nowrap", px: 3 }} 
-    onClick={() => downloadSigniture(govActionID, signature)}>Download Signature</Button>;
+    onClick={() => downloadSignature(govActionID,voterKeyHash, signature)}>Download Signature</Button>;
   }
   
