@@ -23,6 +23,7 @@ export const TransactionButton = () => {
   const [cardanoscan, setCardanoscan] = useState<string>("");
   const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
+  const [stakeCredentialHash, setStakeCredentialHash] = useState<string>("");
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
     isOneVote: false,
@@ -81,6 +82,7 @@ export const TransactionButton = () => {
 
       const changeAddress = await wallet.getChangeAddress();
       const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
+      setStakeCredentialHash(stakeCred);
 
       console.log("Connected wallet network ID:", network);
       console.log("unsignedTransaction:", unsignedTransaction);
@@ -110,7 +112,7 @@ export const TransactionButton = () => {
         isMetadataAnchorValid: await txValidationUtils.checkMetadataAnchor(voteMetadataURL,voteMetadataHash),
         isUnsignedTransaction: txValidationUtils.isUnsignedTransaction(unsignedTransaction),
       });
-  
+      
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       if (votes && hasOneVote) {
@@ -300,7 +302,7 @@ export const TransactionButton = () => {
             <Typography component="pre">{signature}</Typography>
           </Box>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-            <DownloadButton signature={signature} govActionID={govActionID} voterKeyHash={''} />
+            <DownloadButton signature={signature} govActionID={govActionID} voterKeyHash={stakeCredentialHash} />
           </Box>
         </Box>
       )}
