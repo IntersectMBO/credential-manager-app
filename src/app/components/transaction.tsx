@@ -300,7 +300,7 @@ export const TransactionButton = () => {
             <Typography component="pre">{signature}</Typography>
           </Box>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-            <DownloadButton signature={signature} govActionID={govActionID} />
+            <DownloadButton signature={signature} govActionID={govActionID} voterKeyHash={''} />
           </Box>
         </Box>
       )}
