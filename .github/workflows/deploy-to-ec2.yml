@@ -70,7 +70,7 @@ jobs:
 
             # Run the new container with the updated image
             echo "Starting new container with the latest image..."
-            docker run -d --name council-toolkit -e NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs' -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} npm run start
+            docker run -d --name council-toolkit -e NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/' -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} npm run start
            
             # Remove old images if they exist
             if [ ! -z "$old_image" ]; then
