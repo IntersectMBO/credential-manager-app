@@ -1,7 +1,6 @@
 import * as CSL from "@emurgo/cardano-serialization-lib-browser";
 import { deserializeAddress } from "@meshsdk/core";
 // import dotenv from "dotenv";
-// import dotenv from "dotenv";
 import * as blake from 'blakejs';
 // dotenv.config();
 const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
