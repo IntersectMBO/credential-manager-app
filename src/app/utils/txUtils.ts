@@ -3,8 +3,8 @@ import { deserializeAddress } from "@meshsdk/core";
 // import dotenv from "dotenv";
 import * as blake from 'blakejs';
 // dotenv.config();
-// const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
-const NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/';
+const NEXT_PUBLIC_REST_IPFS_GATEWAY=process.env.NEXT_PUBLIC_REST_IPFS_GATEWAY;
+
 /**
  * Decodes a transaction from a hex string to a CardanoSerializationLib Transaction object.
  * @param unsignedTransactionHex hex string of the unsigned transaction.
