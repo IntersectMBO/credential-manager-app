@@ -12,5 +12,6 @@ RUN npm run build
 
 FROM node:20.18
 WORKDIR /app
+ENV NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/'
 COPY --from=build-stage /app ./
 EXPOSE 3000
