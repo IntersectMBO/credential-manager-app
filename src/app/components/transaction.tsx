@@ -215,7 +215,7 @@ export const TransactionButton = () => {
             setMetadataAnchorHash("");
           }}
         />
-        <Button
+        {false && (<Button
           variant="contained"
           component="label"
           color="success"
@@ -239,7 +239,7 @@ export const TransactionButton = () => {
               }
             }}
           />
-        </Button>
+        </Button>)}
         <Button
           variant="contained"
           color="success"
