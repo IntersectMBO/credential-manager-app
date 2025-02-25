@@ -11,6 +11,7 @@ import { TransactionChecks } from "./validationChecks";
 import {decodeHextoTx,convertGAToBech,getCardanoScanURL} from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
 import DownloadButton from "./downloadFiles";
+import FileUploader from "./fileUploader";
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
@@ -215,31 +216,7 @@ export const TransactionButton = () => {
             setMetadataAnchorHash("");
           }}
         />
-        <Button
-          variant="contained"
-          component="label"
-          color="success"
-          sx={{ whiteSpace: "nowrap", px: 3 }}
-        >
-          Upload
-          <input
-            type="file"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  const result = JSON.parse(event.target?.result as string);
-                  console.log("Uploaded file:", result.cborHex);
-                  console.log("Uploaded file:", result);
-                  setUnsignedTransactionHex(result.cborHex);
-                };
-                reader.readAsText(file);
-              }
-            }}
-          />
-        </Button>
+        <FileUploader setUnsignedTransactionHex={setUnsignedTransactionHex} />
         <Button
           variant="contained"
           color="success"
