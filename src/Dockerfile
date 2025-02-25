@@ -1,4 +1,6 @@
 FROM node:20.18 AS build-stage
+ARG NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/'
+ENV NEXT_PUBLIC_REST_IPFS_GATEWAY=$NEXT_PUBLIC_REST_IPFS_GATEWAY
 WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -11,9 +13,6 @@ RUN npm run build
 
 
 FROM node:20.18
-ARG NEXT_PUBLIC_REST_IPFS_GATEWAY
-ENV NEXT_PUBLIC_REST_IPFS_GATEWAY=$NEXT_PUBLIC_REST_IPFS_GATEWAY
 WORKDIR /app
-ENV NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/'
 COPY --from=build-stage /app ./
 EXPOSE 3000
