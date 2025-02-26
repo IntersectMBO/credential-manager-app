@@ -5,11 +5,12 @@ import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container } from "@mui/material";
 import * as CSL from "@emurgo/cardano-serialization-lib-browser";
-import ReactJsonPretty from 'react-json-pretty';
+import ReactJsonPretty from "react-json-pretty";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech, getCardanoScanURL } from "../utils/txUtils";
+import {decodeHextoTx,convertGAToBech,getCardanoScanURL} from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
+import DownloadButton from "./downloadFiles";
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
@@ -22,6 +23,7 @@ export const TransactionButton = () => {
   const [cardanoscan, setCardanoscan] = useState<string>("");
   const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
+  const [stakeCredentialHash, setStakeCredentialHash] = useState<string>("");
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
     isOneVote: false,
@@ -80,6 +82,7 @@ export const TransactionButton = () => {
 
       const changeAddress = await wallet.getChangeAddress();
       const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
+      setStakeCredentialHash(stakeCred);
 
       console.log("Connected wallet network ID:", network);
       console.log("unsignedTransaction:", unsignedTransaction);
@@ -109,7 +112,7 @@ export const TransactionButton = () => {
         isMetadataAnchorValid: await txValidationUtils.checkMetadataAnchor(voteMetadataURL,voteMetadataHash),
         isUnsignedTransaction: txValidationUtils.isUnsignedTransaction(unsignedTransaction),
       });
-  
+      
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       if (votes && hasOneVote) {
@@ -214,9 +217,34 @@ export const TransactionButton = () => {
         />
         <Button
           variant="contained"
+          component="label"
+          color="success"
+          sx={{ whiteSpace: "nowrap", px: 3 }}
+        >
+          Upload
+          <input
+            type="file"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const result = JSON.parse(event.target?.result as string);
+                  console.log("Uploaded file:", result.cborHex);
+                  console.log("Uploaded file:", result);
+                  setUnsignedTransactionHex(result.cborHex);
+                };
+                reader.readAsText(file);
+              }
+            }}
+          />
+        </Button>
+        <Button
+          variant="contained"
           color="success"
           onClick={checkTransaction}
-          sx={{ whiteSpace: "nowrap", px: 3 }}
+          sx={{ whiteSpace: "nowrap", px: 4 }}
         >
           Check Transaction
         </Button>
@@ -297,6 +325,9 @@ export const TransactionButton = () => {
             }}
           >
             <Typography component="pre">{signature}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+            <DownloadButton signature={signature} govActionID={govActionID} voterKeyHash={stakeCredentialHash} />
           </Box>
         </Box>
       )}
