@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@mui/material";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB limit
+const MAX_FILE_SIZE = 30 * 1024 ; // 30KB limit
 const ALLOWED_TYPES = ["application/json", ".unsigned"];
 
 const FileUploader = ({ setUnsignedTransactionHex }: { setUnsignedTransactionHex: (hex: string) => void }) => {
