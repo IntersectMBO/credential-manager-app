@@ -26,7 +26,7 @@ const FileUploader = ({ setUnsignedTransactionHex }: { setUnsignedTransactionHex
       try {
         const result = JSON.parse(event.target?.result as string);
         if (!result.cborHex) {
-            throw new Error("Invalid file format: Missing Transaction Hex.");
+            throw new Error("Invalid file format: Missing Transaction Hex (cborHex field).");
           }
         console.log("Uploaded file:", result);
         setUnsignedTransactionHex(result.cborHex);
