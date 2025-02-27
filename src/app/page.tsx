@@ -1,6 +1,6 @@
 import { Wallet } from "./components/wallet";
 import { TransactionButton } from "./components/transaction";
-import { Container, Typography, Box } from "@mui/material";
+import { Container, Typography, Box, Icon } from "@mui/material";
 import Image from "next/image";
 
 
@@ -32,7 +32,16 @@ export default function Home() {
           <TransactionButton />
           
         </Box>
-        <Typography sx={{ alignSelf: "center-end", mt: "auto"}}>Version 1.3 - IntersectMBO</Typography>
+        
+        <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+          <a href="https://github.com/IntersectMBO/council-toolkit-app" target="_blank">
+            <Image src="/images/github-mark.svg" alt="Logo" width={24} height={24} />
+          </a>
+
+          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+            <Typography>Version 1.3 - IntersectMBO</Typography>
+          </Box>
+        </Box>
       </Container>
       
     </Box>
