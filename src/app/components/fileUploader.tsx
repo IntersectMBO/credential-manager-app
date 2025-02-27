@@ -11,7 +11,7 @@ const FileUploader = ({ setUnsignedTransactionHex }: { setUnsignedTransactionHex
       return false;
     }
     if (file.size > MAX_FILE_SIZE) {
-      alert("File is too large. Please upload a file smaller than 2MB.");
+      alert("File is too large. Please upload a file smaller than 30KB.");
       return false;
     }
     return true;
