@@ -24,6 +24,7 @@ export const TransactionButton = () => {
   const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
   const [stakeCredentialHash, setStakeCredentialHash] = useState<string>("");
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
     isOneVote: false,
@@ -59,6 +60,7 @@ export const TransactionButton = () => {
     setMetadataAnchorURL("");
     setMetadataAnchorHash("");
     resetValidationState();
+    setIsAcknowledged(false);
   }, []);
   
   useEffect(() => {
@@ -270,6 +272,7 @@ export const TransactionButton = () => {
             cardanoscan={cardanoscan}
             metadataAnchorURL={metadataAnchorURL}
             metadataAnchorHash={metadataAnchorHash}
+            onAcknowledgeChange={setIsAcknowledged}
           />
         )}
         <Box
@@ -293,10 +296,16 @@ export const TransactionButton = () => {
 
       {/* Sign Button - Aligned to Right */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+      {!isAcknowledged &&(
+          <Typography color="error" sx={{ mt: 1 }}>
+            ⚠️ You must acknowledge Governance Action ID before signing!
+          </Typography>
+        )}
         <Button
           id="sign-transaction"
           variant="contained"
           color="success"
+          disabled={!isAcknowledged}
           onClick={signTransaction}
           sx={{ whiteSpace: "nowrap", px: 3 }}
         >
