@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import InfoWithTooltip from "../components/infoHover";
+import { TOOLTIP_MESSAGES } from "../constants/infoMessages";
 
 interface TransactionChecksProps {
   isPartOfSigners: boolean;
@@ -28,62 +29,64 @@ export const TransactionChecks = ({
 
       <Box display="flex" flexDirection="column" gap={2} width="48%">
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Should you be signing this transactions?" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.WALLET_NEEDS_TO_SIGN} />
           <Typography variant="body1" fontWeight="bold">
             Wallet needs to sign?: {isPartOfSigners ? "✅" : "❌"}
           </Typography>
         </Box>
         
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Should you be signing this transactions?" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.TRANSACTION_IS_UNSIGNED} />
           <Typography display="flex" flexDirection="column" width="45%" variant="body1" fontWeight="bold">
           Transaction is unsigned?: {isUnsignedTransaction ? "✅" : "❌"}
         </Typography>
         </Box>
         
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Is your wallet connected to the same network that the transaction is for?" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.IS_SAME_NETWORK} />
           <Typography variant="body1" fontWeight="bold">
             Transaction and wallet on the same network?: {isSameNetwork ? "✅" : "❌"}
           </Typography>
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Does the transaction reference Intersect's ICC credential?" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.HAVE_ICC_CREDENTIAL} />
           <Typography variant="body1" fontWeight="bold">
             Is Intersect ICC credential?: {hasICCCredentials ? "✅" : "❌"}
-          </Typography>
-        </Box>
-
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Does the document hosted at the provided metadata URL match the provided hash?" />
-          <Typography variant="body1" fontWeight="bold">
-            Does the metadata match the provided hash?: {isMetadataAnchorValid ? "✅" : "❌"}
           </Typography>
         </Box>
       </Box>
 
       <Box display="flex" flexDirection="column" gap={2} width="48%">
+
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Does the transaction only contain one vote? multiple votes could be misleading" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.IS_ONE_VOTE} />
           <Typography variant="body1" fontWeight="bold">
             Only one vote?: {isOneVote ? "✅" : "❌"}
           </Typography>
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Does the transaction contain any unexpected certificates?" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.HAVE_CERTIFICATES}/>
           <Typography variant="body1" fontWeight="bold">
             Has no certificates?: {hasCertificates ? "❌" : "✅"}
           </Typography>
         </Box>
 
         <Box display="flex" alignItems="center" gap={0.5}>
-          <InfoWithTooltip info="Is your key within the Intersect ICC hierarchy" />
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.CORRECT_PLUTUS_DATA} />
           <Typography variant="body1" fontWeight="bold">
             Is voting key in plutus data?: {isInOutputPlutusData ? "✅" : "❌"}
           </Typography>
         </Box>
+
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <InfoWithTooltip info={TOOLTIP_MESSAGES.CORRECT_METADATA_ANCHOR} />
+          <Typography variant="body1" fontWeight="bold">
+            Does the metadata match the provided hash?: {isMetadataAnchorValid ? "✅" : "❌"}
+          </Typography>
+        </Box>
+
       </Box>
     </Box>
 

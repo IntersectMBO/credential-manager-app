@@ -22,7 +22,7 @@ jobs:
       # Step 3: Build the Docker image from the Dockerfile in src folder
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} ./src
+          DOCKER_BUILDKIT=1 docker build --build-arg NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/' -t ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} ./src 
 
       # Step 4: Log in to Docker Hub
       - name: Log in to Docker Hub
@@ -52,6 +52,9 @@ jobs:
       - name: SSH into EC2 and update containers
         run: |
           ssh -i ec2_key.pem -o StrictHostKeyChecking=no ec2-user@ec2-51-44-65-72.eu-west-3.compute.amazonaws.com << 'EOF'
+            # Get the current image ID before running the new container
+            old_image=$(docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "council-toolkit" | awk '{print $2}')  
+    
             # Pull the latest Docker image from Docker Hub
             docker pull ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }}
 
@@ -67,5 +70,11 @@ jobs:
 
             # Run the new container with the updated image
             echo "Starting new container with the latest image..."
-            docker run -d --name council-toolkit -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} npm run start
+            docker run -d --name council-toolkit -e NEXT_PUBLIC_REST_IPFS_GATEWAY='ipfs.io/ipfs/' -p 3002:3000 ${{ secrets.DOCKER_USERNAME }}/council-toolkit:${{ github.sha }} npm run start
+           
+            # Remove old images if they exist
+            if [ ! -z "$old_image" ]; then
+              echo "Removing old image..."
+              docker rmi -f $old_image
+            fi
           EOF

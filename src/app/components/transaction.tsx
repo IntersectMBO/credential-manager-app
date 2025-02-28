@@ -5,11 +5,13 @@ import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container } from "@mui/material";
 import * as CSL from "@emurgo/cardano-serialization-lib-browser";
-import ReactJsonPretty from 'react-json-pretty';
+import ReactJsonPretty from "react-json-pretty";
 import * as txValidationUtils from "../utils/txValidationUtils";
 import { TransactionChecks } from "./validationChecks";
-import { decodeHextoTx,convertGAToBech, getCardanoScanURL } from "../utils/txUtils";
+import {decodeHextoTx,convertGAToBech,getCardanoScanURL} from "../utils/txUtils";
 import { VotingDetails } from "./votingDetails";
+import DownloadButton from "./downloadFiles";
+import FileUploader from "./fileUploader";
 
 export const TransactionButton = () => {
   const [message, setMessage] = useState("");
@@ -22,6 +24,8 @@ export const TransactionButton = () => {
   const [cardanoscan, setCardanoscan] = useState<string>("");
   const [metadataAnchorURL, setMetadataAnchorURL] = useState<string>("");
   const [metadataAnchorHash, setMetadataAnchorHash] = useState<string>("");
+  const [stakeCredentialHash, setStakeCredentialHash] = useState<string>("");
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [validationState, setValidationState] = useState({
     isPartOfSigners: false,
     isOneVote: false,
@@ -57,6 +61,7 @@ export const TransactionButton = () => {
     setMetadataAnchorURL("");
     setMetadataAnchorHash("");
     resetValidationState();
+    setIsAcknowledged(false);
   }, []);
   
   useEffect(() => {
@@ -80,6 +85,7 @@ export const TransactionButton = () => {
 
       const changeAddress = await wallet.getChangeAddress();
       const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
+      setStakeCredentialHash(stakeCred);
 
       console.log("Connected wallet network ID:", network);
       console.log("unsignedTransaction:", unsignedTransaction);
@@ -109,7 +115,7 @@ export const TransactionButton = () => {
         isMetadataAnchorValid: await txValidationUtils.checkMetadataAnchor(voteMetadataURL,voteMetadataHash),
         isUnsignedTransaction: txValidationUtils.isUnsignedTransaction(unsignedTransaction),
       });
-  
+      
       //********************************************Voting Details *********************************************************************/
       const transactionNetworkID = transactionBody.outputs().get(0).address().to_bech32().startsWith("addr_test1") ? 0 : 1;
       if (votes && hasOneVote) {
@@ -212,11 +218,12 @@ export const TransactionButton = () => {
             setMetadataAnchorHash("");
           }}
         />
+        <FileUploader setUnsignedTransactionHex={setUnsignedTransactionHex} />
         <Button
           variant="contained"
           color="success"
           onClick={checkTransaction}
-          sx={{ whiteSpace: "nowrap", px: 3 }}
+          sx={{ whiteSpace: "nowrap", px: 4 }}
         >
           Check Transaction
         </Button>
@@ -242,6 +249,7 @@ export const TransactionButton = () => {
             cardanoscan={cardanoscan}
             metadataAnchorURL={metadataAnchorURL}
             metadataAnchorHash={metadataAnchorHash}
+            onAcknowledgeChange={setIsAcknowledged}
           />
         )}
         <Box
@@ -265,10 +273,16 @@ export const TransactionButton = () => {
 
       {/* Sign Button - Aligned to Right */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+      {!isAcknowledged &&(
+          <Typography color="error" sx={{ mt: 1 }}>
+            ⚠️ You must acknowledge voting details before signing!
+          </Typography>
+        )}
         <Button
           id="sign-transaction"
           variant="contained"
           color="success"
+          disabled={!isAcknowledged}
           onClick={signTransaction}
           sx={{ whiteSpace: "nowrap", px: 3 }}
         >
@@ -297,6 +311,9 @@ export const TransactionButton = () => {
             }}
           >
             <Typography component="pre">{signature}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+            <DownloadButton signature={signature} govActionID={govActionID} voterKeyHash={stakeCredentialHash} />
           </Box>
         </Box>
       )}
