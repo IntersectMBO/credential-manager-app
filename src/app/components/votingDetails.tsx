@@ -1,6 +1,8 @@
 import {Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link, Checkbox, FormControlLabel } from "@mui/material";
 import { openInNewTab } from "../utils/txUtils";
 import { useState } from "react";
+import InfoWithTooltip from "./infoHover";
+import { info } from "console";
 
 interface VotingDetailsProps {
     govActionID: string;
@@ -19,12 +21,20 @@ export const VotingDetails = ({
     metadataAnchorHash,
     onAcknowledgeChange 
 }: VotingDetailsProps) => {
-    const [isChecked,setIsChecked] = useState(false);
+    const [checkboxes, setCheckboxes] = useState({
+        ackGovAction: false,
+        ackVoteChoice: false,
+        ackMetadataAnchor: false,
+    });
 
-    const handleCheckBoxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setIsChecked(event.target.checked); 
-        onAcknowledgeChange(event.target.checked);
-      };
+    const allChecked = Object.values(checkboxes).every(Boolean);
+
+    const handleCheckBoxChange = (name: keyof typeof checkboxes) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedCheckboxes = { ...checkboxes, [name]: event.target.checked };
+      setCheckboxes(updatedCheckboxes);
+      onAcknowledgeChange(Object.values(updatedCheckboxes).every(Boolean));
+    };
+
     return (
       <TableContainer sx={{ mb: 3 }}>
         <Table sx={{ mt: 3 }}>
@@ -42,16 +52,24 @@ export const VotingDetails = ({
                   {govActionID}
                 </a>
               </TableCell>
-              <TableCell>
-                <FormControlLabel
-                  control={<Checkbox checked={isChecked} onChange={handleCheckBoxChange} />}
-                  label="*Acknowledge"
-                />
-              </TableCell>
+                <TableCell  style={{ display: 'flex', alignItems: 'center' }}>
+                  <FormControlLabel
+                  control={<Checkbox checked={checkboxes.ackGovAction} onChange={handleCheckBoxChange("ackGovAction")} />}
+                  label="*"
+                  />
+                  <InfoWithTooltip info="Please acknowledge that you have checked the governance action details." />
+                </TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Vote Choice </TableCell>
               <TableCell>{voteChoice}</TableCell>
+              <TableCell style={{ display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={<Checkbox checked={checkboxes.ackVoteChoice} onChange={handleCheckBoxChange("ackVoteChoice")} />}
+                  label="*"
+                />
+                 <InfoWithTooltip info="Please acknowledge that you have checked and agreed to the vote choice." />
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>
@@ -64,6 +82,13 @@ export const VotingDetails = ({
                 >
                   {metadataAnchorURL}
                 </Link>
+              </TableCell>
+              <TableCell style={{ display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={<Checkbox checked={checkboxes.ackMetadataAnchor} onChange={handleCheckBoxChange("ackMetadataAnchor")} />}
+                  label="*"
+                />
+                <InfoWithTooltip info="Please acknowledge that you have checked and agreed to the metadata anchor." />
               </TableCell>
             </TableRow>
             <TableRow>

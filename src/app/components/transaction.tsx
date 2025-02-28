@@ -275,7 +275,7 @@ export const TransactionButton = () => {
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
       {!isAcknowledged &&(
           <Typography color="error" sx={{ mt: 1 }}>
-            ⚠️ You must acknowledge Governance Action ID before signing!
+            ⚠️ You must acknowledge voting details before signing!
           </Typography>
         )}
         <Button
