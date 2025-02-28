@@ -2,6 +2,7 @@ import {Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link, Chec
 import { openInNewTab } from "../utils/txUtils";
 import { useState } from "react";
 import InfoWithTooltip from "./infoHover";
+import { TOOLTIP_MESSAGES } from "../constants/infoMessages";
 
 interface VotingDetailsProps {
     govActionID: string;
@@ -56,7 +57,7 @@ export const VotingDetails = ({
                   control={<Checkbox checked={checkboxes.ackGovAction} onChange={handleCheckBoxChange("ackGovAction")} />}
                   label="*"
                   />
-                  <InfoWithTooltip info="Please acknowledge that you have checked the governance action details." />
+                  <InfoWithTooltip info={TOOLTIP_MESSAGES.ACK_GOV_ACTION_ID} />
                 </TableCell>
             </TableRow>
             <TableRow>
@@ -67,7 +68,7 @@ export const VotingDetails = ({
                   control={<Checkbox checked={checkboxes.ackVoteChoice} onChange={handleCheckBoxChange("ackVoteChoice")} />}
                   label="*"
                 />
-                 <InfoWithTooltip info="Please acknowledge that you have checked and agreed to the vote choice." />
+                 <InfoWithTooltip info={TOOLTIP_MESSAGES.ACK_VOTE_CHOICE} />
               </TableCell>
             </TableRow>
             <TableRow>
@@ -87,7 +88,7 @@ export const VotingDetails = ({
                   control={<Checkbox checked={checkboxes.ackMetadataAnchor} onChange={handleCheckBoxChange("ackMetadataAnchor")} />}
                   label="*"
                 />
-                <InfoWithTooltip info="Please acknowledge that you have checked and agreed to the metadata anchor." />
+                <InfoWithTooltip info={TOOLTIP_MESSAGES.ACK_METADATA_ANCHOR} />
               </TableCell>
             </TableRow>
             <TableRow>
