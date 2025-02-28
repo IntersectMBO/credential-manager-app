@@ -2,7 +2,6 @@ import {Table, TableBody, TableCell, TableContainer, TableRow, Paper, Link, Chec
 import { openInNewTab } from "../utils/txUtils";
 import { useState } from "react";
 import InfoWithTooltip from "./infoHover";
-import { info } from "console";
 
 interface VotingDetailsProps {
     govActionID: string;
@@ -19,7 +18,7 @@ export const VotingDetails = ({
     cardanoscan, 
     metadataAnchorURL, 
     metadataAnchorHash,
-    onAcknowledgeChange 
+    onAcknowledgeChange  
 }: VotingDetailsProps) => {
     const [checkboxes, setCheckboxes] = useState({
         ackGovAction: false,
