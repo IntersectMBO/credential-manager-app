@@ -49,6 +49,7 @@ export const TransactionButton = () => {
       isUnsignedTransaction: false,
     }));
   };
+  const dangerMode= true;
 
   const resetAllStates = useCallback(() => {
     setMessage("");
@@ -235,9 +236,14 @@ export const TransactionButton = () => {
           Transaction Validation Checks
         </Typography>
 
-        {unsignedTransaction && (
+        {unsignedTransaction && !dangerMode && (
             <TransactionChecks {...validationState}
           />
+        )}
+        {dangerMode && (
+          <Typography variant="h6" sx={{ mb: 2 }}>
+          YOU ARE ON DANGER MODE - NO VALIDATION CHECKS WILL BE PERFORMED
+        </Typography>
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
           Voting Details
@@ -273,7 +279,7 @@ export const TransactionButton = () => {
 
       {/* Sign Button - Aligned to Right */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-      {!isAcknowledged &&(
+      {false &&(
           <Typography color="error" sx={{ mt: 1 }}>
             ⚠️ You must acknowledge voting details before signing!
           </Typography>
@@ -282,7 +288,7 @@ export const TransactionButton = () => {
           id="sign-transaction"
           variant="contained"
           color="success"
-          disabled={!isAcknowledged}
+          // disabled={!isAcknowledged}
           onClick={signTransaction}
           sx={{ whiteSpace: "nowrap", px: 3 }}
         >
