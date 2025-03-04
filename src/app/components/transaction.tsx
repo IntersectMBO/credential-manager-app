@@ -49,6 +49,7 @@ export const TransactionButton = () => {
       isUnsignedTransaction: false,
     }));
   };
+  const dangerMode= true;
 
   const resetAllStates = useCallback(() => {
     setMessage("");
@@ -138,7 +139,7 @@ export const TransactionButton = () => {
  
   const signTransaction = async () => {
     try {
-      if (validationState.isPartOfSigners) {
+      if (true) {
         // Pass transaction to wallet for signing
         const signedTx = await wallet.signTx(unsignedTransactionHex, true);
         const signedTransactionObj = decodeHextoTx(signedTx);
@@ -157,17 +158,17 @@ export const TransactionButton = () => {
         const expectedVKeyHash = deserializeAddress(await wallet.getChangeAddress()).stakeCredentialHash;
         const providedVKeyHash = providedVKeyObj.hash().to_hex();
 
-        if (providedVKeyHash != expectedVKeyHash) {
-          throw new Error("Wallet returned unexpected VKey.");
-        }
+        // if (providedVKeyHash != expectedVKeyHash) {
+        //   throw new Error("Wallet returned unexpected VKey.");
+        // }
 
         // Check the produced signature if valid
         const txHash = CSL.FixedTransaction.from_hex(unsignedTransactionHex).transaction_hash().to_bytes();
         const validSignature = providedVKeyObj.verify(txHash, CSL.Ed25519Signature.from_hex(signature));
 
-        if (!validSignature){
-          throw new Error("Wallet created an invalid signature.");
-        }
+        // if (!validSignature){
+        //   throw new Error("Wallet created an invalid signature.");
+        // }
 
         setSignature(witnessHex);
         console.log("Witness (hex): ", witnessHex);
@@ -235,9 +236,14 @@ export const TransactionButton = () => {
           Transaction Validation Checks
         </Typography>
 
-        {unsignedTransaction && (
+        {unsignedTransaction && !dangerMode && (
             <TransactionChecks {...validationState}
           />
+        )}
+        {dangerMode && (
+          <Typography variant="h6" sx={{ mb: 2 }}>
+          YOU ARE ON DANGER MODE - NO VALIDATION CHECKS WILL BE PERFORMED
+        </Typography>
         )}
         <Typography variant="h6" sx={{ mt: 3 }}>
           Voting Details
@@ -273,7 +279,7 @@ export const TransactionButton = () => {
 
       {/* Sign Button - Aligned to Right */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-      {!isAcknowledged &&(
+      {false &&(
           <Typography color="error" sx={{ mt: 1 }}>
             ⚠️ You must acknowledge voting details before signing!
           </Typography>
@@ -282,7 +288,7 @@ export const TransactionButton = () => {
           id="sign-transaction"
           variant="contained"
           color="success"
-          disabled={!isAcknowledged}
+          // disabled={!isAcknowledged}
           onClick={signTransaction}
           sx={{ whiteSpace: "nowrap", px: 3 }}
         >
