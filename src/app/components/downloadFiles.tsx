@@ -24,7 +24,12 @@ const downloadSignature = (govActionID : string, voterKeyHash : string , signatu
         voterKeyHash,
         cborHex: signature
     };
-    downloadFile(data, "vote", "signature");
+    // Extract information for file name
+    const voterPrefix = voterKeyHash.substring(0, 5);
+    const govPrefix = govActionID.substring(0, 15);
+    const filename = `${govPrefix}-vote-from-${voterPrefix}`;
+
+    downloadFile(data, filename, "witness");
 }
 
 interface DownloadButtonProps {
