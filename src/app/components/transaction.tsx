@@ -70,6 +70,12 @@ export const TransactionButton = () => {
     }
   }, [connected,resetAllStates]);
 
+  useEffect(() => {
+    if (unsignedTransactionHex) {
+      checkTransaction();
+    }
+  }, [unsignedTransactionHex]);
+
   const checkTransaction = async () => {
     if (!connected) {
       resetValidationState();
@@ -219,14 +225,6 @@ export const TransactionButton = () => {
           }}
         />
         <FileUploader setUnsignedTransactionHex={setUnsignedTransactionHex} />
-        <Button
-          variant="contained"
-          color="success"
-          onClick={checkTransaction}
-          sx={{ whiteSpace: "nowrap", px: 4 }}
-        >
-          Check Transaction
-        </Button>
       </Box>
 
       {/* Transaction Details */}
