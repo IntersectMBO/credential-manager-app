@@ -70,13 +70,7 @@ export const TransactionButton = () => {
     }
   }, [connected,resetAllStates]);
 
-  useEffect(() => {
-    if (unsignedTransactionHex) {
-      checkTransaction();
-    }
-  }, [unsignedTransactionHex]);
-
-  const checkTransaction = async () => {
+  const checkTransaction = useCallback(async () => {
     if (!connected) {
       resetValidationState();
       setVoteChoice("");
@@ -140,7 +134,7 @@ export const TransactionButton = () => {
       console.error("Error validating transaction:", error);
       setMessage("Transaction validation failed. " + error);
     }
-  };
+  }, [unsignedTransactionHex]);
  
   const signTransaction = async () => {
     try {
@@ -187,7 +181,11 @@ export const TransactionButton = () => {
       setMessage("Transaction signing failed. " + error);
     }
   };
-
+  useEffect(() => {
+    if (unsignedTransactionHex) {
+      checkTransaction();
+    }
+  }, [unsignedTransactionHex,checkTransaction]);
   useEffect(() => {
     if (signature || unsignedTransaction) {
       const transactionElement = document.getElementById("sign-transaction");
