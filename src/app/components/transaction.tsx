@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useWallet } from "@meshsdk/react";
 import { deserializeAddress } from "@meshsdk/core";
 import { Button, TextField, Box, Typography, Container } from "@mui/material";
@@ -64,13 +64,19 @@ export const TransactionButton = () => {
     setIsAcknowledged(false);
   }, []);
   
+  const walletRef = useRef(wallet);
+
+  useEffect(() => {
+    walletRef.current = wallet; // Always keep the latest wallet, but without causing re-renders
+  }, [wallet]);
+  
   useEffect(() => {
     if (!connected) {
       resetAllStates();
     }
   }, [connected,resetAllStates]);
 
-  const checkTransaction = async () => {
+  const checkTransaction = useCallback(async () => {
     if (!connected) {
       resetValidationState();
       setVoteChoice("");
@@ -78,12 +84,12 @@ export const TransactionButton = () => {
       return setMessage("Please connect your wallet first.");
     }
     try{
-      const network = await wallet.getNetworkId();
+      const network = await walletRef.current.getNetworkId();
       const unsignedTransaction = decodeHextoTx(unsignedTransactionHex);
       setUnsignedTransaction(unsignedTransaction);
       if (!unsignedTransaction) throw new Error("Invalid transaction format.");
 
-      const changeAddress = await wallet.getChangeAddress();
+      const changeAddress = await walletRef.current.getChangeAddress();
       const stakeCred = deserializeAddress(changeAddress).stakeCredentialHash;
       setStakeCredentialHash(stakeCred);
 
@@ -134,7 +140,7 @@ export const TransactionButton = () => {
       console.error("Error validating transaction:", error);
       setMessage("Transaction validation failed. " + error);
     }
-  };
+  }, [unsignedTransactionHex,walletRef,connected]);
  
   const signTransaction = async () => {
     try {
@@ -181,7 +187,11 @@ export const TransactionButton = () => {
       setMessage("Transaction signing failed. " + error);
     }
   };
-
+  useEffect(() => {
+    if (unsignedTransactionHex) {
+      checkTransaction();
+    }
+  }, [unsignedTransactionHex,checkTransaction]);
   useEffect(() => {
     if (signature || unsignedTransaction) {
       const transactionElement = document.getElementById("sign-transaction");
@@ -219,14 +229,6 @@ export const TransactionButton = () => {
           }}
         />
         <FileUploader setUnsignedTransactionHex={setUnsignedTransactionHex} />
-        <Button
-          variant="contained"
-          color="success"
-          onClick={checkTransaction}
-          sx={{ whiteSpace: "nowrap", px: 4 }}
-        >
-          Check Transaction
-        </Button>
       </Box>
 
       {/* Transaction Details */}
